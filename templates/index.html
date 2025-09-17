@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise de Movimento Aeronáutico - Sistema Avançado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        /* Glassmorphism effect */
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .glass-dark {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .animate-fadeInUp { animation: fadeInUp 0.6s ease-out; }
+        .animate-pulse-custom { animation: pulse 2s infinite; }
+        
+        /* Hover effects */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Button styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(240, 147, 251, 0.4);
+        }
+        
+        /* Stats cards */
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .stat-card-green {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .stat-card-orange {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .stat-card-purple {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #1f2937;
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Toast notification */
+        #toast {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Table improvements */
+        .table-row:hover {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+        
+        /* Chart containers */
+        .chart-container {
+            position: relative;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+    <div id="login-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-sm text-center">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Acesso ao Sistema</h2>
+            <p class="text-gray-600 mb-6">Por favor, faça login para continuar.</p>
+            <form id="loginForm" class="space-y-4">
+                <input type="email" id="email" placeholder="Seu e-mail" required class="w-full px-4 py-2 border rounded-lg">
+                <input type="password" id="password" placeholder="Sua senha" required class="w-full px-4 py-2 border rounded-lg">
+                <button type="submit" class="w-full btn-primary text-white font-semibold py-3 px-4 rounded-xl">Entrar</button>
+            </form>
+            <p id="login-error" class="text-red-500 mt-4 text-sm"></p>
+        </div>
+    </div>
+
+    <div id="user-info" class="hidden fixed top-5 right-5 glass-dark text-white py-2 px-4 rounded-xl shadow-lg z-50 flex items-center gap-4">
+        <span id="user-email" class="text-sm"></span>
+        <button id="logoutButton" class="bg-red-500 hover:bg-red-600 rounded-full w-8 h-8 flex items-center justify-center">
+             <i data-lucide="log-out" class="w-4 h-4 text-white"></i>
+        </button>
+    </div>
+
+    <div id="main-app" class="hidden">
+        <div class="fixed inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute -top-40 -right-40 w-80 h-80 bg-white opacity-10 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-white opacity-10 rounded-full blur-3xl"></div>
+        </div>
+
+        <div id="app" class="relative z-10 container mx-auto p-4 md:p-6 lg:p-8 max-w-7xl">
+            <header class="glass rounded-2xl p-6 mb-8 card-hover animate-fadeInUp">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 animate-pulse-custom">
+                            <i data-lucide="plane" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                                Análise de Tráfego Aéreo
+                            </h1>
+                            <p class="text-gray-600 text-sm">Sistema Avançado de Monitoramento</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                        <span class="text-sm text-gray-600">Sistema Online</span>
+                    </div>
+                </div>
+            </header>
+
+            <main class="grid grid-cols-1 xl:grid-cols-4 gap-8">
+                <div class="xl:col-span-1 space-y-6">
+                    <div class="glass rounded-2xl p-6 card-hover animate-fadeInUp" style="animation-delay: 0.1s">
+                        <div class="flex items-center mb-4">
+                            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+                                <i data-lucide="upload" class="w-4 h-4 text-white"></i>
+                            </div>
+                            <h2 class="text-xl font-semibold text-gray-800">Upload de Dados</h2>
+                        </div>
+                        
+                        <form id="uploadForm" class="space-y-4">
+                            <div class="relative">
+                                <input 
+                                    type="file" 
+                                    id="dataFile" 
+                                    accept=".dat,.dta" 
+                                    required
+                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                >
+                                <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
+                                    <i data-lucide="file-text" class="w-8 h-8 text-gray-400 mx-auto mb-2"></i>
+                                    <p class="text-sm text-gray-600">Clique ou arraste o arquivo .dat</p>
+                                    <p class="text-xs text-gray-400 mt-1">Máximo 10MB</p>
+                                </div>
+                            </div>
+                            
+                            <button 
+                                id="uploadButton" 
+                                type="submit" 
+                                class="w-full btn-primary text-white font-semibold py-3 px-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                <span id="button-text">Processar Arquivo</span>
+                                <div id="loading-spinner" class="spinner w-5 h-5 border-4 border-white rounded-full hidden"></div>
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="glass rounded-2xl p-6 card-hover animate-fadeInUp" style="animation-delay: 0.2s">
+                        <div class="flex items-center mb-4">
+                            <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mr-3">
+                                <i data-lucide="filter" class="w-4 h-4 text-white"></i>
+                            </div>
+                            <h2 class="text-xl font-semibold text-gray-800">Filtros</h2>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Data Inicial</label>
+                                <input 
+                                    type="date" 
+                                    id="startDate" 
+                                    class="filter-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                >
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Data Final</label>
+                                <input 
+                                    type="date" 
+                                    id="endDate" 
+                                    class="filter-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                >
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
+                                <div class="relative">
+                                    <input 
+                                        type="text" 
+                                        id="filterValue" 
+                                        placeholder="Matrícula, Destino ou Aeronave" 
+                                        class="filter-input w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                    >
+                                    <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-3"></i>
+                                </div>
+                            </div>
+                            
+                            <button 
+                                id="clearFilterButton" 
+                                class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-all hover:transform hover:-translate-y-1"
+                            >
+                                Limpar Filtros
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-2xl p-6 card-hover animate-fadeInUp" style="animation-delay: 0.3s">
+                        <div class="flex items-center mb-4">
+                            <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+                                <i data-lucide="activity" class="w-4 h-4 text-white"></i>
+                            </div>
+                            <h2 class="text-xl font-semibold text-gray-800">Status</h2>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Registros Carregados</span>
+                                <span id="loaded-count" class="font-semibold text-blue-600">0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Filtros Ativos</span>
+                                <span id="active-filters" class="font-semibold text-green-600">0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-600">Última Atualização</span>
+                                <span id="last-update" class="font-semibold text-gray-600">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:col-span-3 space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-fadeInUp" style="animation-delay: 0.4s">
+                        <div class="stat-card rounded-2xl p-6 card-hover">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-white/80 text-sm">Total de Voos</p>
+                                    <p id="total-voos" class="text-3xl font-bold text-white">0</p>
+                                </div>
+                                <i data-lucide="plane" class="w-8 h-8 text-white/60"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card-green rounded-2xl p-6 card-hover">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-white/80 text-sm">Voos Comerciais</p>
+                                    <p id="voos-comerciais" class="text-3xl font-bold text-white">0</p>
+                                </div>
+                                <i data-lucide="building" class="w-8 h-8 text-white/60"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card-orange rounded-2xl p-6 card-hover">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-white/80 text-sm">Horário de Pico</p>
+                                    <p id="horario-pico" class="text-3xl font-bold text-white">-</p>
+                                </div>
+                                <i data-lucide="trending-up" class="w-8 h-8 text-white/60"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card-purple rounded-2xl p-6 card-hover">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-700/80 text-sm">Horário Ocioso</p>
+                                    <p id="horario-ocioso" class="text-3xl font-bold text-gray-800">-</p>
+                                </div>
+                                <i data-lucide="trending-down" class="w-8 h-8 text-gray-600"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fadeInUp" style="animation-delay: 0.5s">
+                        <div class="glass rounded-2xl p-6 card-hover chart-container">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                <i data-lucide="pie-chart" class="w-5 h-5 mr-2 text-blue-500"></i>
+                                Voos por Regra
+                            </h3>
+                            <div class="relative h-64">
+                                <canvas id="flightsByRuleChart"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="glass rounded-2xl p-6 card-hover chart-container">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                <i data-lucide="map-pin" class="w-5 h-5 mr-2 text-green-500"></i>
+                                Destinos Principais
+                            </h3>
+                            <div class="relative h-64">
+                                <canvas id="flightsByDestChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-2xl p-6 card-hover chart-container animate-fadeInUp" style="animation-delay: 0.6s">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i data-lucide="clock" class="w-5 h-5 mr-2 text-purple-500"></i>
+                            Distribuição por Horário
+                        </h3>
+                        <div class="relative" style="height: 300px;">
+                            <canvas id="hourlyFlightsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-2xl p-6 card-hover animate-fadeInUp" style="animation-delay: 0.7s">
+                        <div class="flex flex-wrap items-center justify-between mb-6 gap-4">
+                            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                <i data-lucide="table" class="w-5 h-5 mr-2 text-indigo-500"></i>
+                                Registros de Voo
+                            </h3>
+                            <button 
+                                id="downloadCsvButton" 
+                                class="btn-secondary text-white py-2 px-4 rounded-lg text-sm font-medium flex items-center gap-2"
+                            >
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                Download CSV
+                            </button>
+                        </div>
+                        
+                        <div class="overflow-auto rounded-xl border border-gray-200" style="max-height: 500px;">
+                            <table class="w-full text-sm">
+                                <thead class="bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Data/Hora (UTC)</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Matrícula</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Aeronave</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Destino</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Regra</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Pista</th>
+                                        <th class="px-4 py-3 text-left font-semibold text-gray-700">Operador</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dataTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center p-12 text-gray-500">
+                                            <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-4 text-gray-300"></i>
+                                            <p>Aguardando arquivo de dados...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+
+    <div id="toast" class="fixed top-5 right-5 glass-dark text-white py-3 px-6 rounded-xl shadow-lg opacity-0 transform translate-y-[-20px] z-50">
+        <div class="flex items-center gap-3">
+            <i id="toast-icon" data-lucide="check-circle" class="w-5 h-5"></i>
+            <span id="toast-message"></span>
+        </div>
+    </div>
+
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA2EFVZ9UOQcUo_bDlhvSTWXnBDYv-GBGk",
+            authDomain: "analise-trafego-aereo.firebaseapp.com",
+            projectId: "analise-trafego-aereo",
+            storageBucket: "analise-trafego-aereo.appspot.com",
+            messagingSenderId: "848119246677",
+            appId: "1:848119246677:web:cf94faf95dea6cfbea49dc",
+            measurementId: "G-CFJ1PGBR52"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        
+        // --- AUTHENTICATION LOGIC ---
+        const loginOverlay = document.getElementById('login-overlay');
+        const mainApp = document.getElementById('main-app');
+        const loginForm = document.getElementById('loginForm');
+        const loginError = document.getElementById('login-error');
+        const userInfo = document.getElementById('user-info');
+        const userEmail = document.getElementById('user-email');
+        const logoutButton = document.getElementById('logoutButton');
+
+        // Monitora o estado de autenticação do usuário
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // Usuário está logado
+                loginOverlay.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                userInfo.classList.remove('hidden');
+                userEmail.textContent = user.email;
+            } else {
+                // Usuário não está logado
+                loginOverlay.classList.remove('hidden');
+                mainApp.classList.add('hidden');
+                userInfo.classList.add('hidden');
+            }
+            // Recria ícones pois o de logout pode ter sido adicionado dinamicamente
+            lucide.createIcons(); 
+        });
+
+        // Lógica do formulário de login
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            loginError.textContent = '';
+
+            auth.signInWithEmailAndPassword(email, password)
+                .catch(error => {
+                    console.error('Erro de login:', error);
+                    loginError.textContent = 'E-mail ou senha inválidos.';
+                });
+        });
+
+        // Lógica do botão de logout
+        logoutButton.addEventListener('click', () => {
+            auth.signOut();
+        });
+
+
+        // --- ORIGINAL APPLICATION SCRIPT ---
+        
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // --- APPLICATION STATE ---
+        let allFlightData = [];
+        let flightsByRuleChart, flightsByDestChart, hourlyFlightsChart;
+
+        // --- UI ELEMENTS ---
+        const uploadForm = document.getElementById('uploadForm');
+        const dataFile = document.getElementById('dataFile');
+        const uploadButton = document.getElementById('uploadButton');
+        const buttonText = document.getElementById('button-text');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const tableBody = document.getElementById('dataTableBody');
+        const filterInputs = document.querySelectorAll('.filter-input');
+        const clearFilterButton = document.getElementById('clearFilterButton');
+        const downloadCsvButton = document.getElementById('downloadCsvButton');
+
+        // --- UPLOAD LOGIC ---
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (dataFile.files.length === 0) {
+                showToast('Por favor, selecione um arquivo.', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('dataFile', dataFile.files[0]);
+
+            toggleLoading(true);
+
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    showToast('Sessão expirada. Faça login novamente.', 'error');
+                    auth.signOut();
+                    toggleLoading(false);
+                    return;
+                }
+
+                const token = await user.getIdToken();
+
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Erro no servidor');
+                }
+
+                const data = await response.json();
+                allFlightData = data;
+                
+                allFlightData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                applyFiltersAndRender();
+                updateStatus();
+                showToast(`${data.length} registros carregados com sucesso!`, 'success');
+
+            } catch (error) {
+                console.error('Erro no upload:', error);
+                showToast(error.message, 'error');
+                // Não limpe os dados se for apenas um erro de upload
+            } finally {
+                toggleLoading(false);
+            }
+        });
+        
+        // --- FILTERING AND RENDERING LOGIC ---
+        function applyFiltersAndRender() {
+            let filteredData = [...allFlightData];
+            let activeFilters = 0;
+
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const filterValue = document.getElementById('filterValue').value.trim().toUpperCase();
+
+            if (startDate) {
+                filteredData = filteredData.filter(f => f.timestamp && f.timestamp.split('T')[0] >= startDate);
+                activeFilters++;
+            }
+            if (endDate) {
+                filteredData = filteredData.filter(f => f.timestamp && f.timestamp.split('T')[0] <= endDate);
+                activeFilters++;
+            }
+            if (filterValue) {
+                filteredData = filteredData.filter(f =>
+                    f.matricula?.toUpperCase().includes(filterValue) ||
+                    f.destino?.toUpperCase().includes(filterValue) ||
+                    f.tipo_aeronave?.toUpperCase().includes(filterValue)
+                );
+                activeFilters++;
+            }
+            
+            document.getElementById('active-filters').textContent = activeFilters;
+            
+            renderTable(filteredData);
+            renderStats(filteredData);
+            renderCharts(filteredData);
+        }
+
+        filterInputs.forEach(input => input.addEventListener('input', applyFiltersAndRender));
+
+        clearFilterButton.addEventListener('click', () => {
+            filterInputs.forEach(input => input.value = '');
+            applyFiltersAndRender();
+        });
+
+        // --- RENDERING FUNCTIONS ---
+        function renderTable(data) {
+            tableBody.innerHTML = '';
+            if (data.length === 0) {
+                const emptyMessage = allFlightData.length > 0 
+                    ? `<i data-lucide="search-x" class="w-12 h-12 mx-auto mb-4 text-gray-300"></i><p>Nenhum registro corresponde ao filtro.</p>`
+                    : `<i data-lucide="inbox" class="w-12 h-12 mx-auto mb-4 text-gray-300"></i><p>Aguardando arquivo de dados...</p>`;
+                    
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center p-12 text-gray-500">${emptyMessage}</td></tr>`;
+                lucide.createIcons();
+                return;
+            }
+            
+            const rows = data.map((flight, index) => {
+                const date = flight.timestamp ? new Date(flight.timestamp) : null;
+                const formattedDateTime = date 
+                    ? date.toLocaleString('pt-BR', { timeZone: 'UTC', dateStyle: 'short', timeStyle: 'short' })
+                    : '<span class="text-red-500">Inválido</span>';
+                    
+                return `
+                    <tr class="table-row border-b border-gray-100 transition-all duration-200" style="animation-delay: ${index * 0.02}s">
+                        <td class="px-4 py-3 font-medium">${formattedDateTime}</td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                ${flight.matricula || 'N/A'}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">${flight.tipo_aeronave || 'N/A'}</td>
+                        <td class="px-4 py-3">${flight.destino || 'N/A'}</td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${flight.regra_voo === 'IFR' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                ${flight.regra_voo || 'N/A'}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">${flight.pista || '-'}</td>
+                        <td class="px-4 py-3">${flight.responsavel || 'N/A'}</td>
+                    </tr>`;
+            }).join('');
+            
+            tableBody.innerHTML = rows;
+        }
+
+        function renderStats(data) {
+            const commercialPrefixes = ['AZU', 'GLO', 'TAM'];
+            const voosComerciais = data.filter(f => commercialPrefixes.some(p => f.matricula?.startsWith(p))).length;
+            
+            let horarioPico = '-';
+            let horarioOcioso = '-';
+
+            if(data.length > 0) {
+                const hourlyCounts = data.reduce((acc, flight) => {
+                    if(!flight.timestamp) return acc;
+                    const hour = new Date(flight.timestamp).getUTCHours();
+                    acc[hour] = (acc[hour] || 0) + 1;
+                    return acc;
+                }, {});
+                
+                const counts = Object.values(hourlyCounts);
+                const hours = Object.keys(hourlyCounts);
+
+                if(counts.length > 0) {
+                    const maxCount = Math.max(...counts);
+                    const minCount = Math.min(...counts);
+                    horarioPico = hours.filter(h => hourlyCounts[h] === maxCount).join(', ') + 'h';
+                    horarioOcioso = hours.filter(h => hourlyCounts[h] === minCount).join(', ') + 'h';
+                }
+            }
+
+            // Animate number changes
+            animateNumber('total-voos', data.length);
+            animateNumber('voos-comerciais', voosComerciais);
+            document.getElementById('horario-pico').textContent = horarioPico;
+            document.getElementById('horario-ocioso').textContent = horarioOcioso;
+        }
+
+        function renderCharts(data) {
+            renderRuleAndDestCharts(data);
+            renderHourlyChart(data);
+        }
+
+        function renderRuleAndDestCharts(data) {
+            // Chart by Flight Rule
+            const ruleCounts = data.reduce((acc, flight) => {
+                const rule = flight.regra_voo || 'N/A';
+                acc[rule] = (acc[rule] || 0) + 1;
+                return acc;
+            }, {});
+
+            if (flightsByRuleChart) flightsByRuleChart.destroy();
+            flightsByRuleChart = new Chart(document.getElementById('flightsByRuleChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(ruleCounts),
+                    datasets: [{
+                        data: Object.values(ruleCounts),
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.8)',
+                            'rgba(16, 163, 74, 0.8)',
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(245, 158, 11, 0.8)'
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Chart by Destination
+            const destCounts = data.reduce((acc, flight) => {
+                const dest = flight.destino || 'N/A';
+                acc[dest] = (acc[dest] || 0) + 1;
+                return acc;
+            }, {});
+
+            const topDests = Object.entries(destCounts)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 8);
+
+            if (flightsByDestChart) flightsByDestChart.destroy();
+            flightsByDestChart = new Chart(document.getElementById('flightsByDestChart'), {
+                type: 'bar',
+                data: {
+                    labels: topDests.map(([dest]) => dest),
+                    datasets: [{
+                        data: topDests.map(([,count]) => count),
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderHourlyChart(data) {
+            const hourlyCounts = Array(24).fill(0);
+            
+            data.forEach(flight => {
+                if (flight.timestamp) {
+                    const hour = new Date(flight.timestamp).getUTCHours();
+                    hourlyCounts[hour]++;
+                }
+            });
+
+            if (hourlyFlightsChart) hourlyFlightsChart.destroy();
+            hourlyFlightsChart = new Chart(document.getElementById('hourlyFlightsChart'), {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`),
+                    datasets: [{
+                        label: 'Voos por Hora',
+                        data: hourlyCounts,
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- UTILITY FUNCTIONS ---
+        function toggleLoading(isLoading) {
+            uploadButton.disabled = isLoading;
+            buttonText.textContent = isLoading ? 'Processando...' : 'Processar Arquivo';
+            loadingSpinner.classList.toggle('hidden', !isLoading);
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+            
+            toastMessage.textContent = message;
+            
+            // Update icon based on type
+            if (type === 'error') {
+                toastIcon.setAttribute('data-lucide', 'x-circle');
+                toast.className = toast.className.replace('glass-dark', 'bg-red-500');
+            } else {
+                toastIcon.setAttribute('data-lucide', 'check-circle');
+                toast.className = toast.className.replace('bg-red-500', 'glass-dark');
+            }
+            
+            lucide.createIcons();
+            
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+            }, 3000);
+        }
+
+        function updateStatus() {
+            document.getElementById('loaded-count').textContent = allFlightData.length;
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString('pt-BR');
+        }
+
+        function animateNumber(elementId, targetValue) {
+            const element = document.getElementById(elementId);
+            const currentValue = parseInt(element.textContent) || 0;
+            const increment = Math.ceil((targetValue - currentValue) / 20);
+            
+            if(isNaN(currentValue)) {
+                element.textContent = targetValue;
+                return;
+            }
+
+            if (currentValue < targetValue) {
+                const nextValue = Math.min(currentValue + increment, targetValue);
+                element.textContent = nextValue;
+                setTimeout(() => animateNumber(elementId, targetValue), 25);
+            } else if (currentValue > targetValue) {
+                 const nextValue = Math.max(currentValue - increment, targetValue);
+                element.textContent = nextValue;
+                setTimeout(() => animateNumber(elementId, targetValue), 25);
+            }
+        }
+
+        // CSV Download functionality
+        downloadCsvButton.addEventListener('click', () => {
+            if (allFlightData.length === 0) {
+                showToast('Nenhum dado disponível para download.', 'error');
+                return;
+            }
+
+            const headers = ['Data/Hora', 'Matrícula', 'Aeronave', 'Destino', 'Regra', 'Pista', 'Operador'];
+            const csvContent = [
+                headers.join(','),
+                ...allFlightData.map(flight => [
+                    flight.timestamp || '',
+                    flight.matricula || '',
+                    flight.tipo_aeronave || '',
+                    flight.destino || '',
+                    flight.regra_voo || '',
+                    flight.pista || '',
+                    flight.responsavel || ''
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `dados_voo_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            showToast('Arquivo CSV baixado com sucesso!', 'success');
+        });
+
+        // Initialize status
+        updateStatus();
+    </script>
+</body>
+</html>
