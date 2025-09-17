@@ -1,0 +1,11 @@
+# Arquivos de ambiente e segredos
+firebase-credentials.json
+.env
+
+# Arquivos de cache do Python
+__pycache__/
+*.pyc
+
+# Dependências do sistema operacional
+.DS_Store
+Thumbs.db
