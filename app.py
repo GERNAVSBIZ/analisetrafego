@@ -13,7 +13,6 @@ from firebase_admin import credentials, auth, firestore
 app = Flask(__name__)
 db = None
 try:
-    # ... (bloco de inicialização do Firebase sem alterações) ...
     creds_json_str = os.environ.get('FIREBASE_CREDENTIALS_JSON')
     if creds_json_str:
         creds_dict = json.loads(creds_json_str)
@@ -26,12 +25,13 @@ try:
 except Exception as e:
     print(f"ERRO: Falha ao inicializar o Firebase Admin SDK: {e}")
 
-
+# vvvvvv FUNÇÃO DE PARSE FINAL COM LÓGICA COMERCIAL VS GERAL vvvvvv
 def parse_data_file(file_content):
     lines = file_content.split('\n')
     records = []
     icao_code = 'SBIZ'
     data_date = None
+    commercial_prefixes = ['AZU', 'GLO', 'TAM']
 
     for line in lines:
         if len(line.strip()) < 30 or line.startswith('SBIZAIZ0'):
@@ -44,39 +44,66 @@ def parse_data_file(file_content):
         }
 
         try:
-            rule_match = re.search(r'\s(IV|VV)\s', line)
+            # 1. Extrair data da posição fixa
+            data_str_header = line[9:15] # DDMMYY
+
+            # 2. Bloco de dados principal começa após a data
+            data_block = line[15:].strip()
+
+            # 3. Lógica para separar matrícula e tipo de aeronave
+            is_commercial = any(data_block.startswith(prefix) for prefix in commercial_prefixes)
+            
+            if is_commercial:
+                # Voo Comercial: 7 caracteres de matrícula, sem espaço
+                record['matricula'] = data_block[:7]
+                acft_block = data_block[7:]
+                # Encontra onde o tipo da aeronave termina (antes da classe)
+                acft_match = re.search(r'([A-Z0-9]+)([GSNM])', acft_block)
+                if acft_match:
+                    record['tipo_aeronave'] = acft_match.group(1)
+                    record['flight_class'] = acft_match.group(2)
+                    # O que sobra são os dados de rota
+                    route_block = acft_block[acft_match.end():].strip()
+                else:
+                    route_block = acft_block # Caso não encontre a classe
+            else:
+                # Voo Geral: 5 caracteres de matrícula, com espaço
+                parts = data_block.split(None, 1)
+                record['matricula'] = parts[0]
+                if len(parts) > 1:
+                    acft_block = parts[1]
+                    acft_match = re.search(r'([A-Z0-9]+)([GSNM])', acft_block)
+                    if acft_match:
+                        record['tipo_aeronave'] = acft_match.group(1)
+                        record['flight_class'] = acft_match.group(2)
+                        route_block = acft_block[acft_match.end():].strip()
+                    else:
+                        route_block = acft_block
+                else:
+                    route_block = ""
+
+
+            # 4. Processar o restante da linha (bloco de rota)
+            rule_match = re.search(r'(IV|VV)', route_block)
             if rule_match:
                 record['regra_voo'] = rule_match.group(1).replace('IV', 'IFR').replace('VV', 'VFR')
-                before_rule = line[:rule_match.start()]
-                after_rule = line[rule_match.end():]
-            else:
-                before_rule = line
-                after_rule = ''
-
-            if after_rule:
-                record['responsavel'] = after_rule.strip().split(' ')[-1]
-                pista_match = re.search(r'(07|25)', after_rule)
+                after_rule_block = route_block[rule_match.end():].strip()
+                route_block = route_block[:rule_match.start()].strip()
+                
+                pista_match = re.search(r'(07|25)', after_rule_block)
                 if pista_match:
                     record['pista'] = pista_match.group(1)
+                if after_rule_block:
+                    record['responsavel'] = after_rule_block.split()[-1]
 
-            main_data_block = re.sub(r'^SBIZAIZ\d+\s*', '', before_rule).strip()
-            record['matricula'] = main_data_block.split(' ')[0] # A matrícula é sempre a primeira parte
-
-            time_match = re.search(r'(\d{4})', main_data_block)
+            # 5. Extrair horário e códigos ICAO do bloco de rota
+            time_match = re.search(r'(\d{4})', route_block)
             horario_str = ''
             if time_match:
                 horario_str = time_match.group(1)
-                try:
-                    # vvvvvv AQUI ESTÁ A CORREÇÃO DEFINITIVA vvvvvv
-                    data_str_header = line[9:15] # Pega DDMMYY da posição correta
-                    # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-                    dt_obj = datetime.strptime(f"{data_str_header}{horario_str}", '%d%m%y%H%M')
-                    record['timestamp'] = dt_obj.isoformat() + 'Z'
-                    if data_date is None: data_date = record['timestamp']
-                except (ValueError, IndexError): pass
-                main_data_block = main_data_block.replace(horario_str, '', 1)
+                route_block = route_block.replace(horario_str, '', 1)
 
-            icao_codes = re.findall(r'S[A-Z0-9]{3}', main_data_block)
+            icao_codes = re.findall(r'S[A-Z0-9]{3}', route_block)
             
             if len(icao_codes) >= 2:
                 record['destino'] = icao_codes[0]
@@ -92,18 +119,13 @@ def parse_data_file(file_content):
                 record['origem'] = icao_code
                 record['destino'] = icao_code
             
-            remaining_block = main_data_block
-            for code in icao_codes:
-                remaining_block = remaining_block.replace(code, '')
-            
-            parts = remaining_block.strip().split()
-            if len(parts) > 1:
-                acft_match = re.search(r'^([A-Z0-9]+)([GSNM])', parts[1])
-                if acft_match:
-                    record['tipo_aeronave'] = acft_match.group(1)
-                    record['flight_class'] = acft_match.group(2)
-                else:
-                    record['tipo_aeronave'] = parts[1]
+            # 6. Construir o timestamp
+            if horario_str:
+                try:
+                    dt_obj = datetime.strptime(f"{data_str_header}{horario_str}", '%d%m%y%H%M')
+                    record['timestamp'] = dt_obj.isoformat() + 'Z'
+                    if data_date is None: data_date = record['timestamp']
+                except (ValueError, IndexError): pass
 
             records.append(record)
 
@@ -111,6 +133,8 @@ def parse_data_file(file_content):
             print(f"Erro ao processar linha: '{line.strip()}'. Erro: {e}")
     
     return {"records": records, "icao_code": "SBIZ", "data_date": data_date}
+# ^^^^^^ FIM DA FUNÇÃO ATUALIZADA ^^^^^^
+
 
 # ... O RESTANTE DO ARQUIVO (ROTAS) PERMANECE EXATAMENTE IGUAL ...
 @app.route('/')
@@ -122,7 +146,6 @@ def upload_file():
         auth_header = request.headers.get('Authorization')
         id_token = auth_header.split(' ').pop()
         decoded_token = auth.verify_id_token(id_token)
-        print(f"Upload autorizado para o usuário: {decoded_token['uid']}")
     except Exception as e:
         return jsonify({"error": "Token inválido ou expirado"}), 401
     if 'dataFile' not in request.files:
@@ -133,16 +156,10 @@ def upload_file():
     try:
         content = io.StringIO(file.stream.read().decode("utf-8", errors='ignore')).getvalue()
         parsed_data = parse_data_file(content)
-        records = parsed_data["records"]
-        icao_code = parsed_data["icao_code"]
-        data_date = parsed_data["data_date"]
-        if not records:
-            return jsonify({"error": "Nenhum registro válido encontrado no arquivo"}), 400
-        df = pd.DataFrame(records)
         return jsonify({
-            "records": json.loads(df.to_json(orient='records', date_format='iso')),
-            "icao_code": icao_code,
-            "data_date": data_date
+            "records": parsed_data["records"],
+            "icao_code": parsed_data["icao_code"],
+            "data_date": parsed_data["data_date"]
         })
     except Exception as e:
         return jsonify({"error": f"Erro ao processar o arquivo: {str(e)}"}), 500
@@ -178,7 +195,6 @@ def save_records():
                 batch.commit()
                 batch = db.batch()
         batch.commit()
-        print(f"Sucesso! {len(records_to_save)} registros salvos.")
         return jsonify({"success": True, "message": f"{len(records_to_save)} registros salvos com sucesso!", "documentId": upload_ref.id}), 201
     except Exception as e:
         print(f"ERRO ao salvar no Firestore: {e}")
@@ -247,13 +263,10 @@ def delete_upload(upload_id):
             return jsonify({"error": "Acesso não autorizado"}), 403
         records_ref = upload_ref.collection('records')
         docs = records_ref.limit(500).stream()
-        deleted = 0
         batch = db.batch()
         for doc in docs:
             batch.delete(doc.reference)
-            deleted += 1
-        if deleted > 0:
-            batch.commit()
+        batch.commit()
         upload_ref.delete()
         print(f"Sucesso! Upload {upload_id} apagado pelo usuário {user_id}")
         return jsonify({"success": True, "message": "Registro apagado com sucesso!"}), 200
