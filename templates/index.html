@@ -47,7 +47,6 @@
         const auth = firebase.auth();
         const loginOverlay = document.getElementById('login-overlay'); const mainApp = document.getElementById('main-app'); const loginForm = document.getElementById('loginForm'); const loginError = document.getElementById('login-error'); const userInfo = document.getElementById('user-info'); const userEmail = document.getElementById('user-email'); const logoutButton = document.getElementById('logoutButton');
         
-        // vvvvvv BLOCO DE CÓDIGO CONSOLIDADO E CORRIGIDO vvvvvv
         document.addEventListener('DOMContentLoaded', () => {
             auth.onAuthStateChanged(user => {
                 if (user) {
@@ -55,7 +54,7 @@
                     mainApp.classList.remove('hidden');
                     userInfo.classList.remove('hidden');
                     userEmail.textContent = user.email;
-                    fetchUploadHistory(); // Agora a função existe e será chamada
+                    fetchUploadHistory();
                 } else {
                     loginOverlay.classList.remove('hidden');
                     mainApp.classList.add('hidden');
@@ -67,7 +66,9 @@
             logoutButton.addEventListener('click', () => { auth.signOut(); });
 
             lucide.createIcons();
-            let allFlightData = []; let currentIcaoCode = null; let currentDataDate = null;
+            // Variáveis globais
+            let allFlightData = []; 
+            let processedFilesData = []; // Armazena os dados agrupados por arquivo
             let flightsByRuleChart, flightsByDestChart, hourlyFlightsChart, dayOfWeekChart, monthlyTrendsChart, runwayUsageChart, aircraftTypesChart, operatorChart, trafficProjectionChart;
             
             const uploadForm = document.getElementById('uploadForm'); const dataFile = document.getElementById('dataFile'); const uploadButton = document.getElementById('uploadButton'); const buttonText = document.getElementById('button-text'); const loadingSpinner = document.getElementById('loading-spinner'); const tableBody = document.getElementById('dataTableBody');
@@ -92,6 +93,7 @@
                     if (!response.ok) { const err = await response.json(); throw new Error(err.error || "Falha ao buscar dados consolidados"); }
                     const records = await response.json();
                     allFlightData = records;
+                    processedFilesData = []; // Limpa dados de upload ao buscar por período
                     allFlightData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                     updateDataPeriodDisplay(startDate, endDate);
                     applyFiltersAndRender();
@@ -126,22 +128,28 @@
                         throw new Error(errorData.error || 'Erro no servidor');
                     }
                     const data = await response.json();
-                    allFlightData = data.records;
-                    currentIcaoCode = data.icao_code;
-                    currentDataDate = data.data_date;
+                    
+                    // ATUALIZADO: Armazena os dados agrupados e junta para visualização
+                    processedFilesData = data.grouped_records;
+                    allFlightData = processedFilesData.flatMap(group => group.records);
+
                     allFlightData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                     
-                    updateDataPeriodDisplay(currentDataDate, currentDataDate);
+                    // Define o período de exibição com base no primeiro e último arquivo
+                    const firstDate = processedFilesData[0]?.data_date;
+                    const lastDate = processedFilesData[processedFilesData.length - 1]?.data_date;
+                    updateDataPeriodDisplay(firstDate, lastDate);
+
                     applyFiltersAndRender();
                     updateStatus();
-                    showToast(`${allFlightData.length} registros carregados com sucesso!`, 'success');
+                    showToast(`${allFlightData.length} registros de ${processedFilesData.length} arquivo(s) carregados!`, 'success');
                     saveToCloudButton.disabled = false;
                 } catch (error) {
                     console.error('Erro no upload:', error);
                     showToast(error.message, 'error');
                 } finally {
                     toggleLoading(false);
-                    dataFile.value = ''; // Limpa a seleção de arquivos
+                    dataFile.value = '';
                     fileUploadText.textContent = 'Clique ou arraste o(s) arquivo(s) .dat';
                 }
             });
@@ -154,17 +162,52 @@
                 }
             });
 
-            saveToCloudButton.addEventListener('click', async () => { if (allFlightData.length === 0) { showToast('Não há dados para salvar.', 'error'); return; } saveToCloudButton.disabled = true; const originalButtonText = saveToCloudButton.innerHTML; saveToCloudButton.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Salvando...'; lucide.createIcons(); try { const user = auth.currentUser; if (!user) { throw new Error('Sessão expirada. Faça login novamente.'); } const token = await user.getIdToken(); const payload = { records: allFlightData, icao_code: currentIcaoCode, data_date: currentDataDate }; const response = await fetch('/api/save_records', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); const result = await response.json(); if (!response.ok) { throw new Error(result.error || 'Erro ao salvar os dados'); } showToast(result.message, 'success'); fetchUploadHistory(); } catch (error) { console.error('Erro ao salvar:', error); showToast(error.message, 'error'); saveToCloudButton.disabled = false; } finally { saveToCloudButton.innerHTML = originalButtonText; lucide.createIcons(); } });
+            // ATUALIZADO: Botão de salvar agora envia a estrutura agrupada
+            saveToCloudButton.addEventListener('click', async () => { 
+                if (processedFilesData.length === 0) { 
+                    showToast('Não há dados de arquivos para salvar.', 'error'); 
+                    return; 
+                } 
+                saveToCloudButton.disabled = true; 
+                const originalButtonText = saveToCloudButton.innerHTML; 
+                saveToCloudButton.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Salvando...'; 
+                lucide.createIcons(); 
+                try { 
+                    const user = auth.currentUser; 
+                    if (!user) { throw new Error('Sessão expirada. Faça login novamente.'); } 
+                    const token = await user.getIdToken(); 
+                    // Envia a lista de grupos de arquivos
+                    const response = await fetch('/api/save_records', { 
+                        method: 'POST', 
+                        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify(processedFilesData) 
+                    }); 
+                    const result = await response.json(); 
+                    if (!response.ok) { throw new Error(result.error || 'Erro ao salvar os dados'); } 
+                    showToast(result.message, 'success'); 
+                    fetchUploadHistory(); 
+                    processedFilesData = []; // Limpa os dados após salvar
+                    saveToCloudButton.disabled = true; // Desabilita até novo upload
+                } catch (error) { 
+                    console.error('Erro ao salvar:', error); 
+                    showToast(error.message, 'error'); 
+                    saveToCloudButton.disabled = false; 
+                } finally { 
+                    saveToCloudButton.innerHTML = originalButtonText; 
+                    lucide.createIcons(); 
+                } 
+            });
             
             async function fetchUploadHistory() { renderUploadHistory([]); try { const user = auth.currentUser; if (!user) { return; } const token = await user.getIdToken(); const response = await fetch('/api/get_uploads', { headers: { 'Authorization': 'Bearer ' + token } }); if (!response.ok) { throw new Error('Falha ao buscar histórico'); } const uploads = await response.json(); renderUploadHistory(uploads); } catch (error) { console.error('Erro ao buscar histórico:', error); uploadHistoryList.innerHTML = '<p class="text-sm text-red-500 text-center py-4">Erro ao carregar histórico.</p>'; } }
-            function renderUploadHistory(uploads) { uploadHistoryList.innerHTML = ''; if (!uploads || uploads.length === 0) { uploadHistoryList.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Nenhum histórico encontrado.</p>'; return; } uploads.forEach(upload => { const item = document.createElement('div'); item.className = 'p-3 rounded-lg flex justify-between items-center group'; const dateStringToUse = upload.dataDate || upload.createdAt; const date = new Date(dateStringToUse); const year = date.getFullYear(); const month = (date.getMonth() + 1).toString().padStart(2, '0'); const icao = upload.icaoCode || '----'; const displayText = `${year}${month}${icao}`; item.innerHTML = ` <div data-upload-id="${upload.uploadId}" class="flex-grow cursor-pointer"> <p class="font-semibold text-sm text-gray-700">${displayText}</p> <p class="text-xs text-gray-500">${upload.recordCount} registros</p> </div> <button class="delete-upload-btn p-2 rounded-full hover:bg-red-100 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" data-upload-id="${upload.uploadId}"> <i data-lucide="trash-2" class="w-4 h-4"></i> </button>`; uploadHistoryList.appendChild(item); }); lucide.createIcons(); }
-            async function loadRecords(uploadId) { showToast('Carregando registros...', 'success'); try { const user = auth.currentUser; if (!user) { throw new Error('Sessão expirada. Faça login novamente.'); } const token = await user.getIdToken(); const response = await fetch(`/api/get_records/${uploadId}`, { headers: { 'Authorization': 'Bearer ' + token } }); if (!response.ok) { const err = await response.json(); throw new Error(err.error || "Falha ao carregar registros"); } const records = await response.json(); allFlightData = records; currentIcaoCode = null; currentDataDate = null; updateDataPeriodDisplay(allFlightData.length > 0 ? allFlightData[0].timestamp : null, allFlightData.length > 0 ? allFlightData[0].timestamp : null); applyFiltersAndRender(); updateStatus(); showToast(`${records.length} registros carregados do histórico!`, 'success'); } catch (error) { console.error('Erro ao carregar registros:', error); showToast(error.message, 'error'); } }
+            function renderUploadHistory(uploads) { uploadHistoryList.innerHTML = ''; if (!uploads || uploads.length === 0) { uploadHistoryList.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">Nenhum histórico encontrado.</p>'; return; } uploads.forEach(upload => { const item = document.createElement('div'); item.className = 'p-3 rounded-lg flex justify-between items-center group'; const dateStringToUse = upload.dataDate || upload.createdAt; const date = new Date(dateStringToUse); const year = date.getUTCFullYear(); const month = (date.getMonth() + 1).toString().padStart(2, '0'); const icao = upload.icaoCode || '----'; const displayText = `${year}${month}${icao}`; item.innerHTML = ` <div data-upload-id="${upload.uploadId}" class="flex-grow cursor-pointer"> <p class="font-semibold text-sm text-gray-700">${displayText}</p> <p class="text-xs text-gray-500">${upload.recordCount} registros</p> </div> <button class="delete-upload-btn p-2 rounded-full hover:bg-red-100 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" data-upload-id="${upload.uploadId}"> <i data-lucide="trash-2" class="w-4 h-4"></i> </button>`; uploadHistoryList.appendChild(item); }); lucide.createIcons(); }
+            async function loadRecords(uploadId) { showToast('Carregando registros...', 'success'); try { const user = auth.currentUser; if (!user) { throw new Error('Sessão expirada. Faça login novamente.'); } const token = await user.getIdToken(); const response = await fetch(`/api/get_records/${uploadId}`, { headers: { 'Authorization': 'Bearer ' + token } }); if (!response.ok) { const err = await response.json(); throw new Error(err.error || "Falha ao carregar registros"); } const records = await response.json(); allFlightData = records; processedFilesData = []; const firstDate = allFlightData.length > 0 ? allFlightData[0].timestamp : null; const lastDate = allFlightData.length > 0 ? allFlightData[allFlightData.length - 1].timestamp : null; updateDataPeriodDisplay(firstDate, lastDate); applyFiltersAndRender(); updateStatus(); showToast(`${records.length} registros carregados do histórico!`, 'success'); } catch (error) { console.error('Erro ao carregar registros:', error); showToast(error.message, 'error'); } }
             async function deleteUpload(uploadId) { if (!confirm('Tem certeza que deseja apagar este registro? A ação não pode ser desfeita.')) { return; } showToast('Apagando registro...', 'success'); try { const user = auth.currentUser; if (!user) { throw new Error('Sessão expirada.'); } const token = await user.getIdToken(); const response = await fetch(`/api/delete_upload/${uploadId}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } }); const result = await response.json(); if (!response.ok) { throw new Error(result.error || "Falha ao apagar registro"); } showToast(result.message, 'success'); fetchUploadHistory(); } catch (error) { console.error('Erro ao apagar registro:', error); showToast(error.message, 'error'); } }
             uploadHistoryList.addEventListener('click', (e) => { const deleteButton = e.target.closest('.delete-upload-btn'); const loadItem = e.target.closest('div[data-upload-id]'); if (deleteButton) { deleteUpload(deleteButton.dataset.uploadId); } else if (loadItem) { loadRecords(loadItem.dataset.uploadId); } });
             
             function applyFiltersAndRender() { let filteredData = [...allFlightData]; let activeFilters = 0; tableFilters.forEach(input => { const column = input.dataset.column; const value = input.value.trim().toUpperCase(); if (value) { filteredData = filteredData.filter(f => { if (column === 'timestamp' && f.timestamp) { return formatDateTime(f.timestamp).includes(value); } return f[column]?.toUpperCase().includes(value); }); activeFilters++; } }); document.getElementById('active-filters').textContent = activeFilters; renderTable(filteredData); renderStats(filteredData); renderCharts(filteredData); checkForAnomalies(filteredData); }
             tableFilters.forEach(input => { input.addEventListener('input', applyFiltersAndRender); });
             
+            // ... (Restante do JavaScript [renderTable, renderStats, renderCharts, etc.] sem alterações) ...
             function renderTable(data) {
                 tableBody.innerHTML = '';
                 if (data.length === 0) {
@@ -193,5 +236,5 @@
             updateStatus();
         });
     </script>
-</body>
+    </body>
 </html>
