@@ -1,0 +1,34 @@
+# Credenciais e segredos
+firebase-credentials.json
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Arquivos de versão antiga (usar Git para controle de versão)
+250918app.py
+app250919.py
+templates/index250923.html
+Procfile.txt
+gitignore.txt
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
