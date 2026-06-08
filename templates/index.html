@@ -132,39 +132,128 @@
             color: #2563eb !important;
         }
 
-        /* Sidebar upload gradient icons - replace with clean pastel styles */
+        /* ============================================================
+           SIDEBAR ESCURA (Identidade NAVMANAGER)
+        ============================================================ */
+        .xl\:col-span-1 .glass {
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+            color: #f8fafc !important;
+        }
+
+        /* Títulos da Sidebar */
+        .xl\:col-span-1 h2 {
+            color: #ffffff !important;
+        }
+
+        /* Inputs e seletores na Sidebar */
+        .xl\:col-span-1 input[type="date"],
+        .xl\:col-span-1 input[type="text"],
+        .xl\:col-span-1 select {
+            background-color: #0f172a !important;
+            border: 1px solid #334155 !important;
+            color: #ffffff !important;
+        }
+        .xl\:col-span-1 input[type="date"]:focus,
+        .xl\:col-span-1 input[type="text"]:focus {
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25) !important;
+            outline: none !important;
+        }
+
+        /* Área de upload tracejada na Sidebar */
+        .xl\:col-span-1 .border-dashed {
+            border-color: #475569 !important;
+            background: #0f172a !important;
+        }
+        .xl\:col-span-1 .border-dashed:hover {
+            border-color: #2563eb !important;
+        }
+        .xl\:col-span-1 #file-upload-text {
+            color: #cbd5e1 !important;
+        }
+        .xl\:col-span-1 .text-xs.text-gray-400 {
+            color: #94a3b8 !important;
+        }
+
+        /* Descrições e labels na Sidebar */
+        .xl\:col-span-1 label,
+        .xl\:col-span-1 .text-gray-700,
+        .xl\:col-span-1 .text-gray-600,
+        .xl\:col-span-1 .text-gray-500 {
+            color: #cbd5e1 !important;
+        }
+
+        /* Itens do histórico de uploads em modo escuro */
+        #upload-history-list div p.text-gray-700 {
+            color: #f1f5f9 !important;
+        }
+        #upload-history-list div p.text-gray-500 {
+            color: #94a3b8 !important;
+        }
+        #upload-history-list .group:hover {
+            background-color: #334155 !important;
+        }
+
+        /* Lista de alertas e insights */
+        #anomaly-alerts-list {
+            border-color: #334155 !important;
+        }
+        #anomaly-alerts-list li {
+            color: #cbd5e1 !important;
+        }
+        #anomaly-alerts-list strong {
+            color: #ffffff !important;
+        }
+
+        /* Botão de gerar relatório na Sidebar */
+        #printReportButton {
+            background-color: #334155 !important;
+            color: #ffffff !important;
+        }
+        #printReportButton:hover {
+            background-color: #475569 !important;
+        }
+
+        /* Ícones de cabeçalhos na Sidebar (Fundo pastel adaptado para modo escuro) */
         .xl\:col-span-1 .bg-gradient-to-br.from-blue-500,
         #uploadForm .bg-gradient-to-br.from-blue-500 {
-            background: #eff6ff !important;
+            background: rgba(37, 99, 235, 0.15) !important;
+            border-radius: 6px !important;
         }
         .xl\:col-span-1 .bg-gradient-to-br.from-blue-500 i,
         #uploadForm .bg-gradient-to-br.from-blue-500 i {
-            color: #2563eb !important;
+            color: #60a5fa !important;
         }
 
         .xl\:col-span-1 .bg-gradient-to-br.from-indigo-500 {
-            background: #f8fafc !important;
+            background: rgba(99, 102, 241, 0.15) !important;
+            border-radius: 6px !important;
         }
         .xl\:col-span-1 .bg-gradient-to-br.from-indigo-500 i {
-            color: #475569 !important;
+            color: #818cf8 !important;
         }
 
         .xl\:col-span-1 .bg-gradient-to-br.from-green-500 {
-            background: #f0fdf4 !important;
+            background: rgba(22, 163, 74, 0.15) !important;
+            border-radius: 6px !important;
         }
         .xl\:col-span-1 .bg-gradient-to-br.from-green-500 i {
-            color: #16a34a !important;
+            color: #4ade80 !important;
         }
 
         .xl\:col-span-1 .bg-gradient-to-br.from-yellow-500 {
-            background: #fefce8 !important;
+            background: rgba(202, 138, 4, 0.15) !important;
+            border-radius: 6px !important;
         }
         .xl\:col-span-1 .bg-gradient-to-br.from-yellow-500 i {
-            color: #ca8a04 !important;
+            color: #facc15 !important;
         }
 
+        /* Estilos do container de Pico Mensal (Área Clara) */
         #monthly-peak-container .bg-gradient-to-br.from-orange-500 {
             background: #fff7ed !important;
+            border-radius: 6px !important;
         }
         #monthly-peak-container .bg-gradient-to-br.from-orange-500 i {
             color: #ea580c !important;
