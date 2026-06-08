@@ -13,21 +13,276 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     
     <style>
-        /* CSS sem alterações */
-        ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 3px; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: #94a3b8; } body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; } .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); } .glass-dark { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); } @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } } @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } } .animate-fadeInUp { animation: fadeInUp 0.6s ease-out; } .animate-pulse-custom { animation: pulse 2s infinite; } .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); } .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); } .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); transition: all 0.3s ease; } .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4); } .btn-secondary { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); transition: all 0.3s ease; } .btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(240, 147, 251, 0.4); } .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; } .stat-card-green { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); } .stat-card-orange { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); } .stat-card-purple { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #1f2937; } .spinner { border-top-color: transparent; animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } } #toast { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); } .table-row:hover { background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); } .chart-container { position: relative; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); }
+        /* ============================================================
+           SISTEMA DE DESIGN — ANÁLISE DE TRÁFEGO AÉREO
+           Identidade visual: NAVMANAGER (Slate + Azul técnico)
+        ============================================================ */
+
+        /* Reset e base */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #f1f5f9;
+            min-height: 100vh;
+            color: #0f172a;
+        }
+
+        /* Scrollbar técnica */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Force clean technical border radius */
+        .glass, .rounded-2xl, .rounded-xl, .rounded-lg, .rounded-md {
+            border-radius: 6px !important;
+        }
+        .rounded-3xl {
+            border-radius: 8px !important;
+        }
+
+        /* Cards — brancos, bordas nítidas */
+        .glass {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .glass-dark {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #f8fafc;
+        }
+
+        /* Stat cards — fundo branco, borda esquerda colorida */
+        .stat-card, .stat-card-green, .stat-card-orange, .stat-card-purple {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+        }
+        .stat-card { border-left: 4px solid #2563eb !important; }
+        .stat-card-green { border-left: 4px solid #16a34a !important; }
+        .stat-card-orange { border-left: 4px solid #ea580c !important; }
+        .stat-card-purple { border-left: 4px solid #7c3aed !important; }
+
+        /* Override stat card internal elements styled with white utilities */
+        .stat-card p, .stat-card-green p, .stat-card-orange p, .stat-card-purple p {
+            color: #475569 !important; /* slate-600 label */
+        }
+        .stat-card p[id], .stat-card-green p[id], .stat-card-orange p[id], .stat-card-purple p[id] {
+            color: #0f172a !important; /* slate-900 value */
+        }
+        .stat-card i, .stat-card-green i, .stat-card-orange i, .stat-card-purple i {
+            color: #94a3b8 !important; /* slate-400 icon */
+        }
+
+        /* Botões */
+        .btn-primary {
+            background: #2563eb !important;
+            border-radius: 6px !important;
+            transition: background 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8 !important;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.2) !important;
+        }
+        .btn-secondary {
+            background: #475569 !important;
+            border-radius: 6px !important;
+            transition: background 0.2s ease;
+        }
+        .btn-secondary:hover {
+            background: #334155 !important;
+        }
+
+        /* Hover nos cards — leve elevação */
+        .card-hover {
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .card-hover:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            transform: translateY(-2px);
+        }
+
+        /* App Header */
+        header.glass {
+            background: #ffffff !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            border-radius: 0px !important;
+            margin-bottom: 2rem !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+        }
+        header .bg-gradient-to-br {
+            background: #eff6ff !important;
+            border-radius: 6px !important;
+            animation: none !important;
+        }
+        header .bg-gradient-to-br i {
+            color: #2563eb !important;
+        }
+        header h1 {
+            background: none !important;
+            color: #0f172a !important;
+            -webkit-text-fill-color: initial !important;
+            font-size: 1.5rem !important;
+            font-weight: 700 !important;
+        }
+        #data-period-display {
+            color: #2563eb !important;
+        }
+
+        /* Sidebar upload gradient icons - replace with clean pastel styles */
+        .xl\:col-span-1 .bg-gradient-to-br.from-blue-500,
+        #uploadForm .bg-gradient-to-br.from-blue-500 {
+            background: #eff6ff !important;
+        }
+        .xl\:col-span-1 .bg-gradient-to-br.from-blue-500 i,
+        #uploadForm .bg-gradient-to-br.from-blue-500 i {
+            color: #2563eb !important;
+        }
+
+        .xl\:col-span-1 .bg-gradient-to-br.from-indigo-500 {
+            background: #f8fafc !important;
+        }
+        .xl\:col-span-1 .bg-gradient-to-br.from-indigo-500 i {
+            color: #475569 !important;
+        }
+
+        .xl\:col-span-1 .bg-gradient-to-br.from-green-500 {
+            background: #f0fdf4 !important;
+        }
+        .xl\:col-span-1 .bg-gradient-to-br.from-green-500 i {
+            color: #16a34a !important;
+        }
+
+        .xl\:col-span-1 .bg-gradient-to-br.from-yellow-500 {
+            background: #fefce8 !important;
+        }
+        .xl\:col-span-1 .bg-gradient-to-br.from-yellow-500 i {
+            color: #ca8a04 !important;
+        }
+
+        #monthly-peak-container .bg-gradient-to-br.from-orange-500 {
+            background: #fff7ed !important;
+        }
+        #monthly-peak-container .bg-gradient-to-br.from-orange-500 i {
+            color: #ea580c !important;
+        }
+        #monthly-peak-container thead {
+            background: #f8fafc !important;
+        }
+        #monthly-peak-container th {
+            color: #475569 !important;
+        }
+        #monthly-peak-container tr.hover\:bg-indigo-50:hover {
+            background-color: #f1f5f9 !important;
+        }
+
+        /* Animação de entrada */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeInUp { animation: fadeInUp 0.3s ease-out both; }
+        .animate-pulse-custom { }
+
+        /* Spinner */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Toast */
+        #toast {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 6px !important;
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important;
+        }
+        #toast.bg-red-500 {
+            background: #ef4444 !important;
+            border-color: #f87171 !important;
+        }
+
+        /* Tabela */
+        .table-row:hover { background: #f8fafc !important; }
+        table th {
+            background: #f8fafc !important;
+            color: #475569 !important;
+            font-weight: 600 !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
+        #upload-history-list .group:hover {
+            background-color: #f1f5f9 !important;
+        }
+
+        /* Inputs */
+        input[type="date"], input[type="file"], input[type="email"], input[type="password"] {
+            border-radius: 6px !important;
+            border-color: #cbd5e1 !important;
+        }
+        input[type="date"]:focus, input[type="email"]:focus, input[type="password"]:focus {
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.15) !important;
+            outline: none !important;
+        }
+
+        /* Filtros de tabela */
         .table-filter-input {
-            width: 100%; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 12px;
+            width: 100%;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            font-size: 12px;
+            background: #fff;
+            color: #0f172a;
         }
         .table-filter-input:focus {
-            border-color: #667eea; outline: none; box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+            border-color: #2563eb;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
         }
+
+        /* Login Overlay */
+        #login-overlay .bg-white {
+            border-radius: 8px !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            background: #ffffff;
+        }
+
+        /* Badges de status */
+        .badge-ifr, .bg-green-100 {
+            background: #dcfce7 !important;
+            color: #15803d !important;
+            font-weight: 600 !important;
+            border-radius: 9999px !important;
+        }
+        .badge-vfr, .bg-yellow-100 {
+            background: #fef9c3 !important;
+            color: #a16207 !important;
+            font-weight: 600 !important;
+            border-radius: 9999px !important;
+        }
+
+        /* Print */
         @media print {
             body { background: #fff; }
             .no-print { display: none !important; }
             main, .xl\:col-span-3, .xl\:col-span-1 { display: block !important; grid-column: span 12 / span 12 !important; }
-            .glass { box-shadow: none !important; border: 1px solid #ddd !important; background: #fff !important; margin-bottom: 20px; page-break-inside: avoid; }
+            .glass { box-shadow: none !important; border: 1px solid #e2e8f0 !important; background: #fff !important; margin-bottom: 20px; page-break-inside: avoid; }
+            .stat-card, .stat-card-green, .stat-card-orange, .stat-card-purple { background: #ffffff !important; border: 1px solid #e2e8f0 !important; -webkit-print-color-adjust: exact; }
             h1, h2, h3 { color: #000 !important; }
-            .bg-clip-text { color: transparent !important; }
+            .bg-clip-text { color: #000 !important; }
         }
     </style>
 </head>
@@ -335,13 +590,13 @@
             }
             function animateNumber(elementId, targetValue) { const element = document.getElementById(elementId); const currentValue = parseInt(element.textContent) || 0; if (currentValue === targetValue) { return; } const difference = targetValue - currentValue; let step = Math.ceil(Math.abs(difference) / 20); if (difference < 0) { step = -step; } const nextValue = currentValue + step; if ((step > 0 && nextValue >= targetValue) || (step < 0 && nextValue <= targetValue)) { element.textContent = targetValue; } else { element.textContent = nextValue; setTimeout(() => animateNumber(elementId, targetValue), 25); } }
             function renderCharts(data) { renderRuleAndDestCharts(data); renderHourlyChart(data); renderDayOfWeekChart(data); renderMonthlyTrendsChart(data); renderRunwayUsageChart(data); renderTopItemsChart(data, 'tipo_aeronave', 'aircraftTypesChart', 5); renderTopItemsChart(data, 'responsavel', 'operatorChart', 5); renderTrafficProjectionChart(data); renderMonthlyPeakTable(data); }
-            function renderRuleAndDestCharts(data) { const ruleCounts = data.reduce((acc, flight) => { const rule = flight.regra_voo || 'N/A'; acc[rule] = (acc[rule] || 0) + 1; return acc; }, {}); if (flightsByRuleChart) flightsByRuleChart.destroy(); flightsByRuleChart = new Chart(document.getElementById('flightsByRuleChart'), { type: 'doughnut', data: { labels: Object.keys(ruleCounts), datasets: [{ data: Object.values(ruleCounts), backgroundColor: ['rgba(102, 126, 234, 0.8)','rgba(16, 163, 74, 0.8)','rgba(239, 68, 68, 0.8)','rgba(245, 158, 11, 0.8)'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } } } } }); const destCounts = data.reduce((acc, flight) => { const dest = flight.destino || 'N/A'; acc[dest] = (acc[dest] || 0) + 1; return acc; }, {}); delete destCounts['SBIZ']; const topDests = Object.entries(destCounts).sort(([,a], [,b]) => b - a).slice(0, 8); if (flightsByDestChart) flightsByDestChart.destroy(); flightsByDestChart = new Chart(document.getElementById('flightsByDestChart'), { type: 'bar', data: { labels: topDests.map(([dest]) => dest), datasets: [{ data: topDests.map(([,count]) => count), backgroundColor: 'rgba(102, 126, 234, 0.8)', borderRadius: 6, borderSkipped: false }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } }, x: { grid: { display: false } } } } }); }
-            function renderHourlyChart(data) { const hourlyCounts = Array(24).fill(0); data.forEach(flight => { if (flight.timestamp) { const hour = new Date(flight.timestamp).getUTCHours(); hourlyCounts[hour]++; } }); if (hourlyFlightsChart) hourlyFlightsChart.destroy(); hourlyFlightsChart = new Chart(document.getElementById('hourlyFlightsChart'), { type: 'line', data: { labels: Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`), datasets: [{ label: 'Voos por Hora', data: hourlyCounts, borderColor: 'rgba(102, 126, 234, 1)', backgroundColor: 'rgba(102, 126, 234, 0.1)', fill: true, tension: 0.4, pointBackgroundColor: 'rgba(102, 126, 234, 1)', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } }, x: { grid: { color: 'rgba(0, 0, 0, 0.05)' } } } } }); }
-            function renderDayOfWeekChart(data) { const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']; const dayCounts = Array(7).fill(0); data.forEach(flight => { if (flight.timestamp) { const day = new Date(flight.timestamp).getUTCDay(); dayCounts[day]++; } }); if (dayOfWeekChart) dayOfWeekChart.destroy(); dayOfWeekChart = new Chart(document.getElementById('dayOfWeekChart'), { type: 'bar', data: { labels: days, datasets: [{ label: 'Voos', data: dayCounts, backgroundColor: 'rgba(239, 68, 68, 0.8)', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } }); }
-            function renderMonthlyTrendsChart(data) { const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']; const monthCounts = Array(12).fill(0); data.forEach(flight => { if (flight.timestamp) { const month = new Date(flight.timestamp).getUTCMonth(); monthCounts[month]++; } }); if (monthlyTrendsChart) monthlyTrendsChart.destroy(); monthlyTrendsChart = new Chart(document.getElementById('monthlyTrendsChart'), { type: 'line', data: { labels: months, datasets: [{ label: 'Voos', data: monthCounts, borderColor: 'rgba(245, 158, 11, 1)', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } }); }
-            function renderRunwayUsageChart(data) { const runwayCounts = data.reduce((acc, flight) => { const runway = flight.pista || 'N/A'; if(runway !== 'N/A' && runway.trim() !== '') acc[runway] = (acc[runway] || 0) + 1; return acc; }, {}); if (runwayUsageChart) runwayUsageChart.destroy(); runwayUsageChart = new Chart(document.getElementById('runwayUsageChart'), { type: 'doughnut', data: { labels: Object.keys(runwayCounts), datasets: [{ data: Object.values(runwayCounts), backgroundColor: ['rgba(59, 130, 246, 0.8)', 'rgba(16, 185, 129, 0.8)', 'rgba(234, 179, 8, 0.8)'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } }); }
-            function renderTopItemsChart(data, key, chartId, limit) { const counts = data.reduce((acc, flight) => { const item = flight[key] || 'N/A'; acc[item] = (acc[item] || 0) + 1; return acc; }, {}); delete counts['N/A']; const topItems = Object.entries(counts).sort(([,a],[,b]) => b - a).slice(0, limit); let chartInstance; if (chartId === 'aircraftTypesChart') chartInstance = aircraftTypesChart; if (chartId === 'operatorChart') chartInstance = operatorChart; if (chartInstance) chartInstance.destroy(); chartInstance = new Chart(document.getElementById(chartId), { type: 'bar', data: { labels: topItems.map(([item]) => item), datasets: [{ label: 'Voos', data: topItems.map(([,count]) => count), backgroundColor: 'rgba(139, 92, 246, 0.8)', borderRadius: 6 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } } }); if (chartId === 'aircraftTypesChart') aircraftTypesChart = chartInstance; if (chartId === 'operatorChart') operatorChart = chartInstance; }
-            function renderTrafficProjectionChart(data) { if (trafficProjectionChart) trafficProjectionChart.destroy(); const canvas = document.getElementById('trafficProjectionChart'); const container = canvas.parentElement.parentElement; const monthlyCounts = data.reduce((acc, flight) => { if (!flight.timestamp) return acc; const monthKey = flight.timestamp.slice(0, 7); acc[monthKey] = (acc[monthKey] || 0) + 1; return acc; }, {}); const sortedMonths = Object.keys(monthlyCounts).sort(); if (sortedMonths.length < 2) { container.style.display = 'none'; return; } container.style.display = 'block'; const historicalData = sortedMonths.map(month => monthlyCounts[month]); const regressionData = sortedMonths.map((month, index) => [index, monthlyCounts[month]]); const regressionLine = ss.linearRegressionLine(ss.linearRegression(regressionData)); const projectionLabels = []; const projectionData = []; const lastHistoricalValue = historicalData[historicalData.length - 1]; for (let i = 0; i < 3; i++) { const lastDate = new Date(sortedMonths[sortedMonths.length - 1] + '-01T12:00:00Z'); lastDate.setUTCMonth(lastDate.getUTCMonth() + i + 1); projectionLabels.push(lastDate.toLocaleString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC'})); const projectedValue = regressionLine(sortedMonths.length + i); projectionData.push(projectedValue > 0 ? Math.round(projectedValue) : 0); } trafficProjectionChart = new Chart(canvas, { type: 'line', data: { labels: sortedMonths.concat(projectionLabels), datasets: [{ label: 'Histórico Mensal', data: historicalData, borderColor: 'rgba(102, 126, 234, 1)', backgroundColor: 'rgba(102, 126, 234, 0.1)', fill: true, tension: 0.1 }, { label: 'Projeção', data: new Array(historicalData.length - 1).fill(null).concat([lastHistoricalValue], projectionData), borderColor: 'rgba(234, 179, 8, 1)', borderDash: [5, 5], fill: false, tension: 0.1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } }); }
+            function renderRuleAndDestCharts(data) { const ruleCounts = data.reduce((acc, flight) => { const rule = flight.regra_voo || 'N/A'; acc[rule] = (acc[rule] || 0) + 1; return acc; }, {}); if (flightsByRuleChart) flightsByRuleChart.destroy(); flightsByRuleChart = new Chart(document.getElementById('flightsByRuleChart'), { type: 'doughnut', data: { labels: Object.keys(ruleCounts), datasets: [{ data: Object.values(ruleCounts), backgroundColor: ['rgba(37, 99, 235, 0.85)','rgba(100, 116, 139, 0.85)','rgba(14, 165, 233, 0.85)','rgba(220, 38, 38, 0.85)'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } } } } }); const destCounts = data.reduce((acc, flight) => { const dest = flight.destino || 'N/A'; acc[dest] = (acc[dest] || 0) + 1; return acc; }, {}); delete destCounts['SBIZ']; const topDests = Object.entries(destCounts).sort(([,a], [,b]) => b - a).slice(0, 8); if (flightsByDestChart) flightsByDestChart.destroy(); flightsByDestChart = new Chart(document.getElementById('flightsByDestChart'), { type: 'bar', data: { labels: topDests.map(([dest]) => dest), datasets: [{ data: topDests.map(([,count]) => count), backgroundColor: 'rgba(37, 99, 235, 0.85)', borderRadius: 6, borderSkipped: false }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } }, x: { grid: { display: false } } } } }); }
+            function renderHourlyChart(data) { const hourlyCounts = Array(24).fill(0); data.forEach(flight => { if (flight.timestamp) { const hour = new Date(flight.timestamp).getUTCHours(); hourlyCounts[hour]++; } }); if (hourlyFlightsChart) hourlyFlightsChart.destroy(); hourlyFlightsChart = new Chart(document.getElementById('hourlyFlightsChart'), { type: 'line', data: { labels: Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`), datasets: [{ label: 'Voos por Hora', data: hourlyCounts, borderColor: 'rgba(37, 99, 235, 1)', backgroundColor: 'rgba(37, 99, 235, 0.08)', fill: true, tension: 0.4, pointBackgroundColor: 'rgba(37, 99, 235, 1)', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } }, x: { grid: { color: 'rgba(0, 0, 0, 0.05)' } } } } }); }
+            function renderDayOfWeekChart(data) { const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']; const dayCounts = Array(7).fill(0); data.forEach(flight => { if (flight.timestamp) { const day = new Date(flight.timestamp).getUTCDay(); dayCounts[day]++; } }); if (dayOfWeekChart) dayOfWeekChart.destroy(); dayOfWeekChart = new Chart(document.getElementById('dayOfWeekChart'), { type: 'bar', data: { labels: days, datasets: [{ label: 'Voos', data: dayCounts, backgroundColor: 'rgba(100, 116, 139, 0.85)', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } }); }
+            function renderMonthlyTrendsChart(data) { const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']; const monthCounts = Array(12).fill(0); data.forEach(flight => { if (flight.timestamp) { const month = new Date(flight.timestamp).getUTCMonth(); monthCounts[month]++; } }); if (monthlyTrendsChart) monthlyTrendsChart.destroy(); monthlyTrendsChart = new Chart(document.getElementById('monthlyTrendsChart'), { type: 'line', data: { labels: months, datasets: [{ label: 'Voos', data: monthCounts, borderColor: 'rgba(37, 99, 235, 1)', backgroundColor: 'rgba(37, 99, 235, 0.08)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } }); }
+            function renderRunwayUsageChart(data) { const runwayCounts = data.reduce((acc, flight) => { const runway = flight.pista || 'N/A'; if(runway !== 'N/A' && runway.trim() !== '') acc[runway] = (acc[runway] || 0) + 1; return acc; }, {}); if (runwayUsageChart) runwayUsageChart.destroy(); runwayUsageChart = new Chart(document.getElementById('runwayUsageChart'), { type: 'doughnut', data: { labels: Object.keys(runwayCounts), datasets: [{ data: Object.values(runwayCounts), backgroundColor: ['rgba(37, 99, 235, 0.85)', 'rgba(100, 116, 139, 0.85)', 'rgba(14, 165, 233, 0.85)'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } }); }
+            function renderTopItemsChart(data, key, chartId, limit) { const counts = data.reduce((acc, flight) => { const item = flight[key] || 'N/A'; acc[item] = (acc[item] || 0) + 1; return acc; }, {}); delete counts['N/A']; const topItems = Object.entries(counts).sort(([,a],[,b]) => b - a).slice(0, limit); let chartInstance; if (chartId === 'aircraftTypesChart') chartInstance = aircraftTypesChart; if (chartId === 'operatorChart') chartInstance = operatorChart; if (chartInstance) chartInstance.destroy(); chartInstance = new Chart(document.getElementById(chartId), { type: 'bar', data: { labels: topItems.map(([item]) => item), datasets: [{ label: 'Voos', data: topItems.map(([,count]) => count), backgroundColor: 'rgba(37, 99, 235, 0.85)', borderRadius: 6 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } } }); if (chartId === 'aircraftTypesChart') aircraftTypesChart = chartInstance; if (chartId === 'operatorChart') operatorChart = chartInstance; }
+            function renderTrafficProjectionChart(data) { if (trafficProjectionChart) trafficProjectionChart.destroy(); const canvas = document.getElementById('trafficProjectionChart'); const container = canvas.parentElement.parentElement; const monthlyCounts = data.reduce((acc, flight) => { if (!flight.timestamp) return acc; const monthKey = flight.timestamp.slice(0, 7); acc[monthKey] = (acc[monthKey] || 0) + 1; return acc; }, {}); const sortedMonths = Object.keys(monthlyCounts).sort(); if (sortedMonths.length < 2) { container.style.display = 'none'; return; } container.style.display = 'block'; const historicalData = sortedMonths.map(month => monthlyCounts[month]); const regressionData = sortedMonths.map((month, index) => [index, monthlyCounts[month]]); const regressionLine = ss.linearRegressionLine(ss.linearRegression(regressionData)); const projectionLabels = []; const projectionData = []; const lastHistoricalValue = historicalData[historicalData.length - 1]; for (let i = 0; i < 3; i++) { const lastDate = new Date(sortedMonths[sortedMonths.length - 1] + '-01T12:00:00Z'); lastDate.setUTCMonth(lastDate.getUTCMonth() + i + 1); projectionLabels.push(lastDate.toLocaleString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC'})); const projectedValue = regressionLine(sortedMonths.length + i); projectionData.push(projectedValue > 0 ? Math.round(projectedValue) : 0); } trafficProjectionChart = new Chart(canvas, { type: 'line', data: { labels: sortedMonths.concat(projectionLabels), datasets: [{ label: 'Histórico Mensal', data: historicalData, borderColor: 'rgba(100, 116, 139, 1)', backgroundColor: 'rgba(100, 116, 139, 0.08)', fill: true, tension: 0.1 }, { label: 'Projeção', data: new Array(historicalData.length - 1).fill(null).concat([lastHistoricalValue], projectionData), borderColor: 'rgba(37, 99, 235, 1)', borderDash: [5, 5], fill: false, tension: 0.1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } }); }
             function checkForAnomalies(data) { anomalyAlertsList.innerHTML = ''; if (data.length < 7) { anomalyAlertsList.innerHTML = '<li>Dados insuficientes para análise.</li>'; return; } const dailyCounts = data.reduce((acc, flight) => { if (!flight.timestamp) return acc; const dayKey = flight.timestamp.slice(0, 10); acc[dayKey] = (acc[dayKey] || 0) + 1; return acc; }, {}); const allCounts = Object.values(dailyCounts); if (allCounts.length < 2) { anomalyAlertsList.innerHTML = '<li>Período muito curto para análise.</li>'; return; } const mean = ss.mean(allCounts); const stdDev = ss.standardDeviation(allCounts); const threshold = 1.5; const anomalies = []; for (const [day, count] of Object.entries(dailyCounts)) { if (count > mean + threshold * stdDev) { anomalies.push({ day, count, type: 'alto' }); } else if (count < mean - threshold * stdDev) { anomalies.push({ day, count, type: 'baixo' }); } } if (anomalies.length === 0) { anomalyAlertsList.innerHTML = '<li><i data-lucide="check-circle" class="w-4 h-4 inline-block mr-2 text-green-500"></i>Nenhuma anomalia significativa detectada.</li>'; lucide.createIcons(); return; } anomalies.sort((a,b) => new Date(a.day) - new Date(b.day)).forEach(anomaly => { const li = document.createElement('li'); const date = new Date(anomaly.day + 'T12:00:00Z').toLocaleDateString('pt-BR', {timeZone: 'UTC'}); const icon = anomaly.type === 'alto' ? '<i data-lucide="arrow-up-circle" class="w-4 h-4 inline-block mr-2 text-red-500"></i>' : '<i data-lucide="arrow-down-circle" class="w-4 h-4 inline-block mr-2 text-blue-500"></i>'; li.innerHTML = `${icon} <strong>Volume ${anomaly.type}:</strong> ${date} teve <strong>${anomaly.count}</strong> voos (média de ${Math.round(mean)}).`; anomalyAlertsList.appendChild(li); }); lucide.createIcons(); }
             
             function toggleLoading(isLoading) { uploadButton.disabled = isLoading; buttonText.textContent = isLoading ? 'Processando...' : 'Processar Arquivo(s)'; loadingSpinner.classList.toggle('hidden', !isLoading); }
