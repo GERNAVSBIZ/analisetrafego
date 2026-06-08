@@ -369,10 +369,5 @@ def get_aggregated_data():
         print(f"ERRO ao agregar dados: {e}")
         return jsonify({"error": "Não foi possível processar a solicitação."}), 500
 
-@app.route('/health')
-def health_check():
-    """Endpoint de keep-alive. Usado por cron-job.org para evitar o sleep do Render."""
-    return jsonify({"status": "ok"}), 200
-
 if __name__ == '__main__':
     app.run(debug=True)

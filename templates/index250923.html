@@ -42,6 +42,7 @@
     </div>
 
     <script>
+        // ... (Bloco de configuração e autenticação do Firebase sem alterações) ...
         const firebaseConfig = { apiKey: "AIzaSyA2EFVZ9UOQcUo_bDlhvSTWXnBDYv-GBGk", authDomain: "analise-trafego-aereo.firebaseapp.com", projectId: "analise-trafego-aereo", storageBucket: "analise-trafego-aereo.appspot.com", messagingSenderId: "848119246677", appId: "1:848119246677:web:cf94faf95dea6cfbea49dc", measurementId: "G-CFJ1PGBR52" }; firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const loginOverlay = document.getElementById('login-overlay'); const mainApp = document.getElementById('main-app'); const loginForm = document.getElementById('loginForm'); const loginError = document.getElementById('login-error'); const userInfo = document.getElementById('user-info'); const userEmail = document.getElementById('user-email'); const logoutButton = document.getElementById('logoutButton');
@@ -65,11 +66,10 @@
             logoutButton.addEventListener('click', () => { auth.signOut(); });
 
             lucide.createIcons();
-            
+            // Variáveis globais
             let allFlightData = []; 
-            let processedFilesData = [];
+            let processedFilesData = []; // Armazena os dados agrupados por arquivo
             let flightsByRuleChart, flightsByDestChart, hourlyFlightsChart, dayOfWeekChart, monthlyTrendsChart, runwayUsageChart, aircraftTypesChart, operatorChart, trafficProjectionChart;
-            let toastTimeoutId = null; // Variável para controlar o timer do toast
             
             const uploadForm = document.getElementById('uploadForm'); const dataFile = document.getElementById('dataFile'); const uploadButton = document.getElementById('uploadButton'); const buttonText = document.getElementById('button-text'); const loadingSpinner = document.getElementById('loading-spinner'); const tableBody = document.getElementById('dataTableBody');
             const downloadCsvButton = document.getElementById('downloadCsvButton'); const saveToCloudButton = document.getElementById('saveToCloudButton'); const uploadHistoryList = document.getElementById('upload-history-list');
@@ -78,78 +78,29 @@
             const tableFilters = document.querySelectorAll('#table-filters .table-filter-input');
             const fileUploadText = document.getElementById('file-upload-text');
 
-            // ATUALIZADO: Função showToast agora aceita uma duração. Duração 0 = persistente.
-            function showToast(message, type = 'success', duration = 3000) {
-                const toast = document.getElementById('toast');
-                const toastMessage = document.getElementById('toast-message');
-                const toastIcon = document.getElementById('toast-icon');
-                
-                // Limpa qualquer timer anterior para evitar que o toast desapareça inesperadamente
-                if (toastTimeoutId) {
-                    clearTimeout(toastTimeoutId);
-                }
-
-                toastMessage.textContent = message;
-                if (type === 'error') {
-                    toastIcon.setAttribute('data-lucide', 'x-circle');
-                    toast.className = toast.className.replace('glass-dark', 'bg-red-500');
-                } else {
-                    toastIcon.setAttribute('data-lucide', 'check-circle');
-                    toast.className = toast.className.replace('bg-red-500', 'glass-dark');
-                }
-                lucide.createIcons();
-                
-                toast.style.opacity = '1';
-                toast.style.transform = 'translateY(0)';
-                
-                // Apenas define um timer para esconder se a duração for maior que 0
-                if (duration > 0) {
-                    toastTimeoutId = setTimeout(() => {
-                        toast.style.opacity = '0';
-                        toast.style.transform = 'translateY(-20px)';
-                    }, duration);
-                }
-            }
-
+            function showToast(message, type = 'success') { const toast = document.getElementById('toast'); const toastMessage = document.getElementById('toast-message'); const toastIcon = document.getElementById('toast-icon'); toastMessage.textContent = message; if (type === 'error') { toastIcon.setAttribute('data-lucide', 'x-circle'); toast.className = toast.className.replace('glass-dark', 'bg-red-500'); } else { toastIcon.setAttribute('data-lucide', 'check-circle'); toast.className = toast.className.replace('bg-red-500', 'glass-dark'); } lucide.createIcons(); toast.style.opacity = '1'; toast.style.transform = 'translateY(0)'; setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-20px)'; }, 3000); }
             function formatDateTime(isoString) { if (!isoString) return '<span class="text-red-500">Inválido</span>'; try { const date = new Date(isoString); const day = String(date.getUTCDate()).padStart(2, '0'); const month = String(date.getUTCMonth() + 1).padStart(2, '0'); const year = date.getUTCFullYear(); const hours = String(date.getUTCHours()).padStart(2, '0'); const minutes = String(date.getUTCMinutes()).padStart(2, '0'); return `${day}/${month}/${year}, ${hours}:${minutes}`; } catch (e) { return '<span class="text-red-500">Inválido</span>'; } }
-            function updateDataPeriodDisplay(startDateStr, endDateStr) { const displayElement = document.getElementById('data-period-display'); if (!startDateStr) { displayElement.innerHTML = ''; return; } try { const start = new Date(startDateStr); const end = new Date(endDateStr); const startMonth = start.toLocaleString('pt-BR', { month: 'long', timeZone: 'UTC' }); const startYear = start.getUTCFullYear(); const endMonth = end.toLocaleString('pt-BR', { month: 'long', timeZone: 'UTC' }); const endYear = end.getUTCFullYear(); let periodText; if (startMonth === endMonth && startYear === endYear) { periodText = `${startMonth.charAt(0).toUpperCase() + startMonth.slice(1)} de ${startYear}`; } else { periodText = `De ${start.toLocaleDateString('pt-BR', {timeZone: 'UTC'})} a ${end.toLocaleDateString('pt-BR', {timeZone: 'UTC'})}`; } displayElement.innerHTML = `Exibindo dados de: <strong class="font-semibold">${periodText}</strong>`; } catch (e) { displayElement.innerHTML = ''; } }
+            function updateDataPeriodDisplay(startDateStr, endDateStr) { const displayElement = document.getElementById('data-period-display'); if (!startDateStr) { displayElement.innerHTML = ''; return; } try { const start = new Date(startDateStr + 'T12:00:00Z'); const end = new Date(endDateStr + 'T12:00:00Z'); const startMonth = start.toLocaleString('pt-BR', { month: 'long', timeZone: 'UTC' }); const startYear = start.getUTCFullYear(); const endMonth = end.toLocaleString('pt-BR', { month: 'long', timeZone: 'UTC' }); const endYear = end.getUTCFullYear(); let periodText; if (startMonth === endMonth && startYear === endYear) { periodText = `${startMonth.charAt(0).toUpperCase() + startMonth.slice(1)} de ${startYear}`; } else { periodText = `De ${start.toLocaleDateString('pt-BR', {timeZone: 'UTC'})} a ${end.toLocaleDateString('pt-BR', {timeZone: 'UTC'})}`; } displayElement.innerHTML = `Exibindo dados de: <strong class="font-semibold">${periodText}</strong>`; } catch (e) { displayElement.innerHTML = ''; } }
             
-            // ATUALIZADO: Função de análise para usar o toast persistente.
             async function runAnalysis() {
-                const startDate = analysisStartDate.value;
-                const endDate = analysisEndDate.value;
-                if (!startDate || !endDate) {
-                    showToast('Por favor, selecione as datas de início e fim.', 'error');
-                    return;
-                }
-                
-                // Mostra a mensagem de "buscando" de forma persistente
-                showToast('Buscando e consolidando dados...', 'success', 0);
-                runAnalysisButton.disabled = true;
-
+                const startDate = analysisStartDate.value; const endDate = analysisEndDate.value;
+                if (!startDate || !endDate) { showToast('Por favor, selecione as datas de início e fim.', 'error'); return; }
+                showToast('Buscando e consolidando dados...', 'success'); runAnalysisButton.disabled = true;
                 try {
                     const user = auth.currentUser; if (!user) { throw new Error('Sessão expirada.'); }
                     const token = await user.getIdToken();
                     const response = await fetch(`/api/get_aggregated_data?start_date=${startDate}&end_date=${endDate}`, { headers: { 'Authorization': 'Bearer ' + token } });
                     if (!response.ok) { const err = await response.json(); throw new Error(err.error || "Falha ao buscar dados consolidados"); }
                     const records = await response.json();
-                    
                     allFlightData = records;
-                    processedFilesData = [];
+                    processedFilesData = []; // Limpa dados de upload ao buscar por período
                     allFlightData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                     updateDataPeriodDisplay(startDate, endDate);
                     applyFiltersAndRender();
                     updateStatus();
-                    
-                    // Substitui a mensagem de "buscando" pela de sucesso (que sumirá em 3s)
                     showToast(`${records.length} registros totais carregados para o período!`, 'success');
-                } catch (error) {
-                    console.error('Erro na análise:', error);
-                    // Substitui a mensagem de "buscando" pela de erro
-                    showToast(error.message, 'error');
-                } finally {
-                    runAnalysisButton.disabled = false;
-                }
+                } catch (error) { console.error('Erro na análise:', error); showToast(error.message, 'error');
+                } finally { runAnalysisButton.disabled = false; }
             }
             runAnalysisButton.addEventListener('click', runAnalysis);
             printReportButton.addEventListener('click', () => { window.print(); });
@@ -178,11 +129,13 @@
                     }
                     const data = await response.json();
                     
+                    // ATUALIZADO: Armazena os dados agrupados e junta para visualização
                     processedFilesData = data.grouped_records;
                     allFlightData = processedFilesData.flatMap(group => group.records);
 
                     allFlightData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                     
+                    // Define o período de exibição com base no primeiro e último arquivo
                     const firstDate = processedFilesData[0]?.data_date;
                     const lastDate = processedFilesData[processedFilesData.length - 1]?.data_date;
                     updateDataPeriodDisplay(firstDate, lastDate);
@@ -209,6 +162,7 @@
                 }
             });
 
+            // ATUALIZADO: Botão de salvar agora envia a estrutura agrupada
             saveToCloudButton.addEventListener('click', async () => { 
                 if (processedFilesData.length === 0) { 
                     showToast('Não há dados de arquivos para salvar.', 'error'); 
@@ -222,6 +176,7 @@
                     const user = auth.currentUser; 
                     if (!user) { throw new Error('Sessão expirada. Faça login novamente.'); } 
                     const token = await user.getIdToken(); 
+                    // Envia a lista de grupos de arquivos
                     const response = await fetch('/api/save_records', { 
                         method: 'POST', 
                         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }, 
@@ -231,8 +186,8 @@
                     if (!response.ok) { throw new Error(result.error || 'Erro ao salvar os dados'); } 
                     showToast(result.message, 'success'); 
                     fetchUploadHistory(); 
-                    processedFilesData = [];
-                    saveToCloudButton.disabled = true;
+                    processedFilesData = []; // Limpa os dados após salvar
+                    saveToCloudButton.disabled = true; // Desabilita até novo upload
                 } catch (error) { 
                     console.error('Erro ao salvar:', error); 
                     showToast(error.message, 'error'); 
@@ -252,6 +207,7 @@
             function applyFiltersAndRender() { let filteredData = [...allFlightData]; let activeFilters = 0; tableFilters.forEach(input => { const column = input.dataset.column; const value = input.value.trim().toUpperCase(); if (value) { filteredData = filteredData.filter(f => { if (column === 'timestamp' && f.timestamp) { return formatDateTime(f.timestamp).includes(value); } return f[column]?.toUpperCase().includes(value); }); activeFilters++; } }); document.getElementById('active-filters').textContent = activeFilters; renderTable(filteredData); renderStats(filteredData); renderCharts(filteredData); checkForAnomalies(filteredData); }
             tableFilters.forEach(input => { input.addEventListener('input', applyFiltersAndRender); });
             
+            // ... (Restante do JavaScript [renderTable, renderStats, renderCharts, etc.] sem alterações) ...
             function renderTable(data) {
                 tableBody.innerHTML = '';
                 if (data.length === 0) {
@@ -280,5 +236,5 @@
             updateStatus();
         });
     </script>
-</body>
+    </body>
 </html>
