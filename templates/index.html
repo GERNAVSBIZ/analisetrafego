@@ -7,197 +7,226 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/simple-statistics@7.8.3/dist/simple-statistics.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     
     <style>
         /* ============================================================
-           SISTEMA DE DESIGN — ANÁLISE DE TRÁFEGO AÉREO
-           Identidade visual: NAVMANAGER (Slate + Azul técnico)
+           SISTEMA DE DESIGN — PORTAL DNIZ (Identidade NAV BRASIL)
+           Estilo: Modern Dark Glassmorphism
         ============================================================ */
 
         /* Reset e base */
         *, *::before, *::after { box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: #f1f5f9;
+            font-family: 'Inter', 'Outfit', system-ui, sans-serif;
+            background-color: #060913;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.25) 0px, transparent 50%), 
+                radial-gradient(at 100% 0%, rgba(13, 148, 136, 0.15) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(88, 28, 135, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
             min-height: 100vh;
-            color: #0f172a;
+            color: #cbd5e1;
         }
 
-        /* Scrollbar técnica */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #060913; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
 
-        /* Force clean technical border radius */
+        /* Arredondamento padrão das caixas */
         .glass, .rounded-2xl, .rounded-xl, .rounded-lg, .rounded-md {
-            border-radius: 6px !important;
-        }
-        .rounded-3xl {
-            border-radius: 8px !important;
+            border-radius: 12px !important;
         }
 
-        /* Cards — brancos, bordas nítidas */
+        /* Cards do sistema — Dark Glassmorphism */
         .glass {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            background: rgba(17, 24, 39, 0.45) !important;
+            backdrop-filter: blur(12px) !important;
+            -webkit-backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2) !important;
+            color: #f8fafc !important;
         }
         .glass-dark {
-            background: #1e293b;
-            border: 1px solid #334155;
-            color: #f8fafc;
+            background: rgba(8, 12, 20, 0.8) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #f8fafc !important;
         }
 
-        /* Stat cards — fundo branco, borda esquerda colorida */
+        /* Stat cards — Fundo escuro com efeito de brilho no hover */
         .stat-card, .stat-card-green, .stat-card-orange, .stat-card-purple {
-            background: #ffffff !important;
-            color: #0f172a !important;
-            border: 1px solid #e2e8f0 !important;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+            background: rgba(17, 24, 39, 0.45) !important;
+            backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2) !important;
+            color: #ffffff !important;
+            transition: all 0.3s ease-in-out !important;
         }
-        .stat-card { border-left: 4px solid #2563eb !important; }
-        .stat-card-green { border-left: 4px solid #16a34a !important; }
-        .stat-card-orange { border-left: 4px solid #ea580c !important; }
-        .stat-card-purple { border-left: 4px solid #7c3aed !important; }
+        .stat-card { border-left: 4px solid #3b82f6 !important; }
+        .stat-card-green { border-left: 4px solid #10b981 !important; }
+        .stat-card-orange { border-left: 4px solid #f97316 !important; }
+        .stat-card-purple { border-left: 4px solid #a855f7 !important; }
 
-        /* Override stat card internal elements styled with white utilities */
+        .stat-card:hover {
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.25) !important;
+            border-color: rgba(59, 130, 246, 0.45) !important;
+            transform: translateY(-2px);
+        }
+        .stat-card-green:hover {
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.25) !important;
+            border-color: rgba(16, 185, 129, 0.45) !important;
+            transform: translateY(-2px);
+        }
+        .stat-card-orange:hover {
+            box-shadow: 0 0 25px rgba(249, 115, 22, 0.25) !important;
+            border-color: rgba(249, 115, 22, 0.45) !important;
+            transform: translateY(-2px);
+        }
+        .stat-card-purple:hover {
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.25) !important;
+            border-color: rgba(168, 85, 247, 0.45) !important;
+            transform: translateY(-2px);
+        }
+
+        /* Textos dentro dos stat cards */
         .stat-card p, .stat-card-green p, .stat-card-orange p, .stat-card-purple p {
-            color: #475569 !important; /* slate-600 label */
+            color: #94a3b8 !important; /* Label slate-400 */
         }
         .stat-card p[id], .stat-card-green p[id], .stat-card-orange p[id], .stat-card-purple p[id] {
-            color: #0f172a !important; /* slate-900 value */
+            color: #ffffff !important; /* Valor branco */
+            font-family: 'JetBrains Mono', monospace !important;
         }
         .stat-card i, .stat-card-green i, .stat-card-orange i, .stat-card-purple i {
-            color: #94a3b8 !important; /* slate-400 icon */
+            color: #94a3b8 !important; /* Ícones slate-400 */
         }
 
         /* Botões */
         .btn-primary {
             background: #2563eb !important;
-            border-radius: 6px !important;
-            transition: background 0.2s ease, box-shadow 0.2s ease;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            transition: all 0.2s ease-in-out !important;
         }
         .btn-primary:hover {
             background: #1d4ed8 !important;
-            box-shadow: 0 4px 12px rgba(37,99,235,0.2) !important;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4) !important;
         }
         .btn-secondary {
-            background: #475569 !important;
-            border-radius: 6px !important;
-            transition: background 0.2s ease;
+            background: rgba(30, 41, 59, 0.6) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #f1f5f9 !important;
+            transition: all 0.2s ease-in-out !important;
         }
         .btn-secondary:hover {
-            background: #334155 !important;
+            background: rgba(30, 41, 59, 0.9) !important;
+            border-color: rgba(255, 255, 255, 0.15) !important;
         }
 
-        /* Hover nos cards — leve elevação */
+        /* Hover nos cards padrão */
         .card-hover {
-            transition: box-shadow 0.2s ease, transform 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .card-hover:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3) !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
             transform: translateY(-2px);
         }
 
-        /* App Header */
+        /* Cabeçalho Principal (Header) */
         header.glass {
-            background: #ffffff !important;
-            border-bottom: 1px solid #e2e8f0 !important;
-            border-radius: 0px !important;
+            background: rgba(8, 12, 20, 0.7) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+            border-radius: 12px !important;
             margin-bottom: 2rem !important;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
         }
         header .bg-gradient-to-br {
-            background: #eff6ff !important;
-            border-radius: 6px !important;
+            background: rgba(59, 130, 246, 0.15) !important;
+            border: 1px solid rgba(59, 130, 246, 0.25) !important;
+            border-radius: 12px !important;
             animation: none !important;
         }
         header .bg-gradient-to-br i {
-            color: #2563eb !important;
+            color: #60a5fa !important;
         }
         header h1 {
             background: none !important;
-            color: #0f172a !important;
+            color: #ffffff !important;
             -webkit-text-fill-color: initial !important;
-            font-size: 1.5rem !important;
-            font-weight: 700 !important;
+            font-size: 1.75rem !important;
+            font-weight: 800 !important;
+            font-family: 'Outfit', sans-serif !important;
         }
         #data-period-display {
-            color: #2563eb !important;
+            color: #fbbf24 !important; /* Amarelo portal */
+        }
+        header p {
+            color: #94a3b8 !important;
         }
 
-        /* ============================================================
-           SIDEBAR ESCURA (Identidade NAVMANAGER)
-        ============================================================ */
-        .xl\:col-span-1 .glass {
-            background: #1e293b !important;
-            border: 1px solid #334155 !important;
-            color: #f8fafc !important;
+        /* Área de drag-and-drop */
+        .border-dashed {
+            border-color: rgba(255, 255, 255, 0.15) !important;
+            background: rgba(8, 12, 20, 0.3) !important;
+        }
+        .border-dashed:hover {
+            border-color: rgba(59, 130, 246, 0.5) !important;
+            background: rgba(8, 12, 20, 0.5) !important;
+        }
+        #file-upload-text {
+            color: #cbd5e1 !important;
         }
 
-        /* Títulos da Sidebar */
-        .xl\:col-span-1 h2 {
+        /* Formulários e Inputs */
+        input[type="date"], input[type="file"], input[type="email"], input[type="password"] {
+            background-color: rgba(8, 12, 20, 0.6) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
             color: #ffffff !important;
+            border-radius: 8px !important;
         }
-
-        /* Inputs e seletores na Sidebar */
-        .xl\:col-span-1 input[type="date"],
-        .xl\:col-span-1 input[type="text"],
-        .xl\:col-span-1 select {
-            background-color: #0f172a !important;
-            border: 1px solid #334155 !important;
-            color: #ffffff !important;
-        }
-        .xl\:col-span-1 input[type="date"]:focus,
-        .xl\:col-span-1 input[type="text"]:focus {
+        input[type="date"]:focus, input[type="email"]:focus, input[type="password"]:focus {
             border-color: #2563eb !important;
             box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25) !important;
             outline: none !important;
         }
 
-        /* Área de upload tracejada na Sidebar */
-        .xl\:col-span-1 .border-dashed {
-            border-color: #475569 !important;
-            background: #0f172a !important;
+        /* Títulos H2 e H3 */
+        h2, h3 {
+            color: #ffffff !important;
+            font-family: 'Outfit', sans-serif !important;
         }
-        .xl\:col-span-1 .border-dashed:hover {
-            border-color: #2563eb !important;
-        }
-        .xl\:col-span-1 #file-upload-text {
+
+        /* Cores gerais de labels e parágrafos */
+        .text-gray-800, .text-gray-700, .text-gray-600 {
             color: #cbd5e1 !important;
         }
-        .xl\:col-span-1 .text-xs.text-gray-400 {
+        .text-gray-500, .text-gray-400 {
             color: #94a3b8 !important;
         }
 
-        /* Descrições e labels na Sidebar */
-        .xl\:col-span-1 label,
-        .xl\:col-span-1 .text-gray-700,
-        .xl\:col-span-1 .text-gray-600,
-        .xl\:col-span-1 .text-gray-500 {
-            color: #cbd5e1 !important;
-        }
-
-        /* Itens do histórico de uploads em modo escuro */
-        #upload-history-list div p.text-gray-700 {
-            color: #f1f5f9 !important;
-        }
-        #upload-history-list div p.text-gray-500 {
-            color: #94a3b8 !important;
+        /* Lista de histórico */
+        #upload-history-list .group {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         #upload-history-list .group:hover {
-            background-color: #334155 !important;
+            background-color: rgba(255, 255, 255, 0.03) !important;
+        }
+        #upload-history-list p.font-semibold {
+            color: #f1f5f9 !important;
         }
 
-        /* Lista de alertas e insights */
+        /* Lista de Alertas */
         #anomaly-alerts-list {
-            border-color: #334155 !important;
+            border-color: rgba(255, 255, 255, 0.06) !important;
         }
         #anomaly-alerts-list li {
             color: #cbd5e1 !important;
@@ -206,172 +235,142 @@
             color: #ffffff !important;
         }
 
-        /* Botão de gerar relatório na Sidebar */
-        #printReportButton {
-            background-color: #334155 !important;
-            color: #ffffff !important;
+        /* Tabela */
+        table th {
+            background: rgba(8, 12, 20, 0.8) !important;
+            color: #cbd5e1 !important;
+            font-weight: 600 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
         }
-        #printReportButton:hover {
-            background-color: #475569 !important;
+        table td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
+            color: #e2e8f0 !important;
         }
-
-        /* Ícones de cabeçalhos na Sidebar (Fundo pastel adaptado para modo escuro) */
-        .xl\:col-span-1 .bg-gradient-to-br.from-blue-500,
-        #uploadForm .bg-gradient-to-br.from-blue-500 {
-            background: rgba(37, 99, 235, 0.15) !important;
-            border-radius: 6px !important;
-        }
-        .xl\:col-span-1 .bg-gradient-to-br.from-blue-500 i,
-        #uploadForm .bg-gradient-to-br.from-blue-500 i {
-            color: #60a5fa !important;
+        .table-row:hover {
+            background: rgba(255, 255, 255, 0.03) !important;
         }
 
+        /* Ícones nos cabeçalhos de cards (Efeitos DNIZ) */
+        .xl\:col-span-1 .bg-gradient-to-br,
+        #uploadForm .bg-gradient-to-br,
+        #monthly-peak-container .bg-gradient-to-br {
+            border-radius: 8px !important;
+        }
+        .xl\:col-span-1 .bg-gradient-to-br.from-blue-500, #uploadForm .bg-gradient-to-br.from-blue-500 {
+            background: rgba(59, 130, 246, 0.15) !important;
+        }
+        .xl\:col-span-1 .bg-gradient-to-br.from-blue-500 i, #uploadForm .bg-gradient-to-br.from-blue-500 i {
+            color: #3b82f6 !important;
+        }
         .xl\:col-span-1 .bg-gradient-to-br.from-indigo-500 {
             background: rgba(99, 102, 241, 0.15) !important;
-            border-radius: 6px !important;
         }
         .xl\:col-span-1 .bg-gradient-to-br.from-indigo-500 i {
-            color: #818cf8 !important;
+            color: #6366f1 !important;
         }
-
         .xl\:col-span-1 .bg-gradient-to-br.from-green-500 {
-            background: rgba(22, 163, 74, 0.15) !important;
-            border-radius: 6px !important;
+            background: rgba(16, 185, 129, 0.15) !important;
         }
         .xl\:col-span-1 .bg-gradient-to-br.from-green-500 i {
-            color: #4ade80 !important;
+            color: #10b981 !important;
         }
-
         .xl\:col-span-1 .bg-gradient-to-br.from-yellow-500 {
-            background: rgba(202, 138, 4, 0.15) !important;
-            border-radius: 6px !important;
+            background: rgba(245, 158, 11, 0.15) !important;
         }
         .xl\:col-span-1 .bg-gradient-to-br.from-yellow-500 i {
-            color: #facc15 !important;
+            color: #f59e0b !important;
         }
-
-        /* Estilos do container de Pico Mensal (Área Clara) */
         #monthly-peak-container .bg-gradient-to-br.from-orange-500 {
-            background: #fff7ed !important;
-            border-radius: 6px !important;
+            background: rgba(249, 115, 22, 0.15) !important;
         }
         #monthly-peak-container .bg-gradient-to-br.from-orange-500 i {
-            color: #ea580c !important;
+            color: #f97316 !important;
         }
+
+        /* Container de Pico Mensal Tabela */
         #monthly-peak-container thead {
-            background: #f8fafc !important;
+            background: rgba(8, 12, 20, 0.8) !important;
         }
         #monthly-peak-container th {
-            color: #475569 !important;
+            color: #fbbf24 !important;
         }
         #monthly-peak-container tr.hover\:bg-indigo-50:hover {
-            background-color: #f1f5f9 !important;
+            background-color: rgba(255, 255, 255, 0.03) !important;
         }
 
-        /* Animação de entrada */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(12px); }
-            to   { opacity: 1; transform: translateY(0); }
+        /* Badges de Regra de Voo (IFR / VFR) */
+        .badge-ifr, .bg-green-100 {
+            background: rgba(16, 185, 129, 0.15) !important;
+            color: #34d399 !important;
+            border: 1px solid rgba(16, 185, 129, 0.2) !important;
+            border-radius: 9999px !important;
         }
-        .animate-fadeInUp { animation: fadeInUp 0.3s ease-out both; }
-        .animate-pulse-custom { }
-
-        /* Spinner */
-        .spinner {
-            border: 3px solid rgba(255,255,255,0.3);
-            border-top-color: #fff;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Toast */
-        #toast {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 6px !important;
-            background: #1e293b !important;
-            border: 1px solid #334155 !important;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important;
-        }
-        #toast.bg-red-500 {
-            background: #ef4444 !important;
-            border-color: #f87171 !important;
+        .badge-vfr, .bg-yellow-100 {
+            background: rgba(245, 158, 11, 0.15) !important;
+            color: #fbbf24 !important;
+            border: 1px solid rgba(245, 158, 11, 0.2) !important;
+            border-radius: 9999px !important;
         }
 
-        /* Tabela */
-        .table-row:hover { background: #f8fafc !important; }
-        table th {
-            background: #f8fafc !important;
-            color: #475569 !important;
-            font-weight: 600 !important;
-            border-bottom: 1px solid #e2e8f0 !important;
+        /* Estilização específica das pílulas de destaque do pico mensal */
+        #monthly-peak-container td .bg-purple-100 {
+            background: rgba(168, 85, 247, 0.15) !important;
+            color: #c084fc !important;
+            border: 1px solid rgba(168, 85, 247, 0.2) !important;
         }
-        #upload-history-list .group:hover {
-            background-color: #f1f5f9 !important;
+        #monthly-peak-container td .bg-red-100 {
+            background: rgba(239, 68, 68, 0.15) !important;
+            color: #f87171 !important;
+            border: 1px solid rgba(239, 68, 68, 0.2) !important;
         }
-
-        /* Inputs */
-        input[type="date"], input[type="file"], input[type="email"], input[type="password"] {
-            border-radius: 6px !important;
-            border-color: #cbd5e1 !important;
-        }
-        input[type="date"]:focus, input[type="email"]:focus, input[type="password"]:focus {
-            border-color: #2563eb !important;
-            box-shadow: 0 0 0 2px rgba(37,99,235,0.15) !important;
-            outline: none !important;
-        }
-
-        /* Filtros de tabela */
-        .table-filter-input {
-            width: 100%;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid #e2e8f0;
-            font-size: 12px;
-            background: #fff;
-            color: #0f172a;
-        }
-        .table-filter-input:focus {
-            border-color: #2563eb;
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+        #monthly-peak-container td .bg-green-100 {
+            background: rgba(16, 185, 129, 0.15) !important;
+            color: #34d399 !important;
+            border: 1px solid rgba(16, 185, 129, 0.2) !important;
         }
 
         /* Login Overlay */
+        #login-overlay {
+            background-color: rgba(6, 9, 19, 0.9) !important;
+        }
         #login-overlay .bg-white {
+            background: rgba(17, 24, 39, 0.8) !important;
+            backdrop-filter: blur(12px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #ffffff !important;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5) !important;
+        }
+        #login-overlay h2, #login-overlay p {
+            color: #ffffff !important;
+        }
+
+        /* Toast */
+        #toast {
+            background: rgba(17, 24, 39, 0.9) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
             border-radius: 8px !important;
-            border: 1px solid #e2e8f0 !important;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05) !important;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #toast.bg-red-500 {
+            background: rgba(220, 38, 38, 0.9) !important;
+            border-color: rgba(220, 38, 38, 0.2) !important;
         }
 
         /* Chart container */
         .chart-container {
             position: relative;
-            background: #ffffff;
-        }
-
-        /* Badges de status */
-        .badge-ifr, .bg-green-100 {
-            background: #dcfce7 !important;
-            color: #15803d !important;
-            font-weight: 600 !important;
-            border-radius: 9999px !important;
-        }
-        .badge-vfr, .bg-yellow-100 {
-            background: #fef9c3 !important;
-            color: #a16207 !important;
-            font-weight: 600 !important;
-            border-radius: 9999px !important;
+            background: rgba(17, 24, 39, 0.45) !important;
         }
 
         /* Print */
         @media print {
-            body { background: #fff; }
+            body { background: #fff !important; color: #000 !important; }
             .no-print { display: none !important; }
             main, .xl\:col-span-3, .xl\:col-span-1 { display: block !important; grid-column: span 12 / span 12 !important; }
-            .glass { box-shadow: none !important; border: 1px solid #e2e8f0 !important; background: #fff !important; margin-bottom: 20px; page-break-inside: avoid; }
-            .stat-card, .stat-card-green, .stat-card-orange, .stat-card-purple { background: #ffffff !important; border: 1px solid #e2e8f0 !important; -webkit-print-color-adjust: exact; }
-            h1, h2, h3 { color: #000 !important; }
-            .bg-clip-text { color: #000 !important; }
+            .glass { box-shadow: none !important; border: 1px solid #ccc !important; background: #fff !important; margin-bottom: 20px; page-break-inside: avoid; color: #000 !important; }
+            .stat-card, .stat-card-green, .stat-card-orange, .stat-card-purple { background: #fff !important; border: 1px solid #ccc !important; color: #000 !important; }
+            h1, h2, h3, p, span { color: #000 !important; }
         }
     </style>
 </head>
@@ -679,13 +678,13 @@
             }
             function animateNumber(elementId, targetValue) { const element = document.getElementById(elementId); const currentValue = parseInt(element.textContent) || 0; if (currentValue === targetValue) { return; } const difference = targetValue - currentValue; let step = Math.ceil(Math.abs(difference) / 20); if (difference < 0) { step = -step; } const nextValue = currentValue + step; if ((step > 0 && nextValue >= targetValue) || (step < 0 && nextValue <= targetValue)) { element.textContent = targetValue; } else { element.textContent = nextValue; setTimeout(() => animateNumber(elementId, targetValue), 25); } }
             function renderCharts(data) { renderRuleAndDestCharts(data); renderHourlyChart(data); renderDayOfWeekChart(data); renderMonthlyTrendsChart(data); renderRunwayUsageChart(data); renderTopItemsChart(data, 'tipo_aeronave', 'aircraftTypesChart', 5); renderTopItemsChart(data, 'responsavel', 'operatorChart', 5); renderTrafficProjectionChart(data); renderMonthlyPeakTable(data); }
-            function renderRuleAndDestCharts(data) { const ruleCounts = data.reduce((acc, flight) => { const rule = flight.regra_voo || 'N/A'; acc[rule] = (acc[rule] || 0) + 1; return acc; }, {}); if (flightsByRuleChart) flightsByRuleChart.destroy(); flightsByRuleChart = new Chart(document.getElementById('flightsByRuleChart'), { type: 'doughnut', data: { labels: Object.keys(ruleCounts), datasets: [{ data: Object.values(ruleCounts), backgroundColor: ['rgba(37, 99, 235, 0.85)','rgba(100, 116, 139, 0.85)','rgba(14, 165, 233, 0.85)','rgba(220, 38, 38, 0.85)'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } } } } }); const destCounts = data.reduce((acc, flight) => { const dest = flight.destino || 'N/A'; acc[dest] = (acc[dest] || 0) + 1; return acc; }, {}); delete destCounts['SBIZ']; const topDests = Object.entries(destCounts).sort(([,a], [,b]) => b - a).slice(0, 8); if (flightsByDestChart) flightsByDestChart.destroy(); flightsByDestChart = new Chart(document.getElementById('flightsByDestChart'), { type: 'bar', data: { labels: topDests.map(([dest]) => dest), datasets: [{ data: topDests.map(([,count]) => count), backgroundColor: 'rgba(37, 99, 235, 0.85)', borderRadius: 6, borderSkipped: false }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } }, x: { grid: { display: false } } } } }); }
-            function renderHourlyChart(data) { const hourlyCounts = Array(24).fill(0); data.forEach(flight => { if (flight.timestamp) { const hour = new Date(flight.timestamp).getUTCHours(); hourlyCounts[hour]++; } }); if (hourlyFlightsChart) hourlyFlightsChart.destroy(); hourlyFlightsChart = new Chart(document.getElementById('hourlyFlightsChart'), { type: 'line', data: { labels: Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`), datasets: [{ label: 'Voos por Hora', data: hourlyCounts, borderColor: 'rgba(37, 99, 235, 1)', backgroundColor: 'rgba(37, 99, 235, 0.08)', fill: true, tension: 0.4, pointBackgroundColor: 'rgba(37, 99, 235, 1)', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } }, x: { grid: { color: 'rgba(0, 0, 0, 0.05)' } } } } }); }
-            function renderDayOfWeekChart(data) { const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']; const dayCounts = Array(7).fill(0); data.forEach(flight => { if (flight.timestamp) { const day = new Date(flight.timestamp).getUTCDay(); dayCounts[day]++; } }); if (dayOfWeekChart) dayOfWeekChart.destroy(); dayOfWeekChart = new Chart(document.getElementById('dayOfWeekChart'), { type: 'bar', data: { labels: days, datasets: [{ label: 'Voos', data: dayCounts, backgroundColor: 'rgba(100, 116, 139, 0.85)', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } }); }
-            function renderMonthlyTrendsChart(data) { const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']; const monthCounts = Array(12).fill(0); data.forEach(flight => { if (flight.timestamp) { const month = new Date(flight.timestamp).getUTCMonth(); monthCounts[month]++; } }); if (monthlyTrendsChart) monthlyTrendsChart.destroy(); monthlyTrendsChart = new Chart(document.getElementById('monthlyTrendsChart'), { type: 'line', data: { labels: months, datasets: [{ label: 'Voos', data: monthCounts, borderColor: 'rgba(37, 99, 235, 1)', backgroundColor: 'rgba(37, 99, 235, 0.08)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } }); }
-            function renderRunwayUsageChart(data) { const runwayCounts = data.reduce((acc, flight) => { const runway = flight.pista || 'N/A'; if(runway !== 'N/A' && runway.trim() !== '') acc[runway] = (acc[runway] || 0) + 1; return acc; }, {}); if (runwayUsageChart) runwayUsageChart.destroy(); runwayUsageChart = new Chart(document.getElementById('runwayUsageChart'), { type: 'doughnut', data: { labels: Object.keys(runwayCounts), datasets: [{ data: Object.values(runwayCounts), backgroundColor: ['rgba(37, 99, 235, 0.85)', 'rgba(100, 116, 139, 0.85)', 'rgba(14, 165, 233, 0.85)'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } }); }
-            function renderTopItemsChart(data, key, chartId, limit) { const counts = data.reduce((acc, flight) => { const item = flight[key] || 'N/A'; acc[item] = (acc[item] || 0) + 1; return acc; }, {}); delete counts['N/A']; const topItems = Object.entries(counts).sort(([,a],[,b]) => b - a).slice(0, limit); let chartInstance; if (chartId === 'aircraftTypesChart') chartInstance = aircraftTypesChart; if (chartId === 'operatorChart') chartInstance = operatorChart; if (chartInstance) chartInstance.destroy(); chartInstance = new Chart(document.getElementById(chartId), { type: 'bar', data: { labels: topItems.map(([item]) => item), datasets: [{ label: 'Voos', data: topItems.map(([,count]) => count), backgroundColor: 'rgba(37, 99, 235, 0.85)', borderRadius: 6 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } } }); if (chartId === 'aircraftTypesChart') aircraftTypesChart = chartInstance; if (chartId === 'operatorChart') operatorChart = chartInstance; }
-            function renderTrafficProjectionChart(data) { if (trafficProjectionChart) trafficProjectionChart.destroy(); const canvas = document.getElementById('trafficProjectionChart'); const container = canvas.parentElement.parentElement; const monthlyCounts = data.reduce((acc, flight) => { if (!flight.timestamp) return acc; const monthKey = flight.timestamp.slice(0, 7); acc[monthKey] = (acc[monthKey] || 0) + 1; return acc; }, {}); const sortedMonths = Object.keys(monthlyCounts).sort(); if (sortedMonths.length < 2) { container.style.display = 'none'; return; } container.style.display = 'block'; const historicalData = sortedMonths.map(month => monthlyCounts[month]); const regressionData = sortedMonths.map((month, index) => [index, monthlyCounts[month]]); const regressionLine = ss.linearRegressionLine(ss.linearRegression(regressionData)); const projectionLabels = []; const projectionData = []; const lastHistoricalValue = historicalData[historicalData.length - 1]; for (let i = 0; i < 3; i++) { const lastDate = new Date(sortedMonths[sortedMonths.length - 1] + '-01T12:00:00Z'); lastDate.setUTCMonth(lastDate.getUTCMonth() + i + 1); projectionLabels.push(lastDate.toLocaleString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC'})); const projectedValue = regressionLine(sortedMonths.length + i); projectionData.push(projectedValue > 0 ? Math.round(projectedValue) : 0); } trafficProjectionChart = new Chart(canvas, { type: 'line', data: { labels: sortedMonths.concat(projectionLabels), datasets: [{ label: 'Histórico Mensal', data: historicalData, borderColor: 'rgba(100, 116, 139, 1)', backgroundColor: 'rgba(100, 116, 139, 0.08)', fill: true, tension: 0.1 }, { label: 'Projeção', data: new Array(historicalData.length - 1).fill(null).concat([lastHistoricalValue], projectionData), borderColor: 'rgba(37, 99, 235, 1)', borderDash: [5, 5], fill: false, tension: 0.1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } }); }
+            function renderRuleAndDestCharts(data) { const ruleCounts = data.reduce((acc, flight) => { const rule = flight.regra_voo || 'N/A'; acc[rule] = (acc[rule] || 0) + 1; return acc; }, {}); if (flightsByRuleChart) flightsByRuleChart.destroy(); flightsByRuleChart = new Chart(document.getElementById('flightsByRuleChart'), { type: 'doughnut', data: { labels: Object.keys(ruleCounts), datasets: [{ data: Object.values(ruleCounts), backgroundColor: ['rgba(37, 99, 235, 0.85)','rgba(100, 116, 139, 0.85)','rgba(14, 165, 233, 0.85)','rgba(220, 38, 38, 0.85)'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, color: '#cbd5e1' } } } } }); const destCounts = data.reduce((acc, flight) => { const dest = flight.destino || 'N/A'; acc[dest] = (acc[dest] || 0) + 1; return acc; }, {}); delete destCounts['SBIZ']; const topDests = Object.entries(destCounts).sort(([,a], [,b]) => b - a).slice(0, 8); if (flightsByDestChart) flightsByDestChart.destroy(); flightsByDestChart = new Chart(document.getElementById('flightsByDestChart'), { type: 'bar', data: { labels: topDests.map(([dest]) => dest), datasets: [{ data: topDests.map(([,count]) => count), backgroundColor: 'rgba(37, 99, 235, 0.85)', borderRadius: 6, borderSkipped: false }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.08)' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } } }); }
+            function renderHourlyChart(data) { const hourlyCounts = Array(24).fill(0); data.forEach(flight => { if (flight.timestamp) { const hour = new Date(flight.timestamp).getUTCHours(); hourlyCounts[hour]++; } }); if (hourlyFlightsChart) hourlyFlightsChart.destroy(); hourlyFlightsChart = new Chart(document.getElementById('hourlyFlightsChart'), { type: 'line', data: { labels: Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`), datasets: [{ label: 'Voos por Hora', data: hourlyCounts, borderColor: 'rgba(37, 99, 235, 1)', backgroundColor: 'rgba(37, 99, 235, 0.08)', fill: true, tension: 0.4, pointBackgroundColor: 'rgba(37, 99, 235, 1)', pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.08)' }, ticks: { color: '#94a3b8' } }, x: { grid: { color: 'rgba(255, 255, 255, 0.08)' }, ticks: { color: '#94a3b8' } } } } }); }
+            function renderDayOfWeekChart(data) { const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']; const dayCounts = Array(7).fill(0); data.forEach(flight => { if (flight.timestamp) { const day = new Date(flight.timestamp).getUTCDay(); dayCounts[day]++; } }); if (dayOfWeekChart) dayOfWeekChart.destroy(); dayOfWeekChart = new Chart(document.getElementById('dayOfWeekChart'), { type: 'bar', data: { labels: days, datasets: [{ label: 'Voos', data: dayCounts, backgroundColor: 'rgba(100, 116, 139, 0.85)', borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.08)' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }); }
+            function renderMonthlyTrendsChart(data) { const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']; const monthCounts = Array(12).fill(0); data.forEach(flight => { if (flight.timestamp) { const month = new Date(flight.timestamp).getUTCMonth(); monthCounts[month]++; } }); if (monthlyTrendsChart) monthlyTrendsChart.destroy(); monthlyTrendsChart = new Chart(document.getElementById('monthlyTrendsChart'), { type: 'line', data: { labels: months, datasets: [{ label: 'Voos', data: monthCounts, borderColor: 'rgba(37, 99, 235, 1)', backgroundColor: 'rgba(37, 99, 235, 0.08)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.08)' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }); }
+            function renderRunwayUsageChart(data) { const runwayCounts = data.reduce((acc, flight) => { const runway = flight.pista || 'N/A'; if(runway !== 'N/A' && runway.trim() !== '') acc[runway] = (acc[runway] || 0) + 1; return acc; }, {}); if (runwayUsageChart) runwayUsageChart.destroy(); runwayUsageChart = new Chart(document.getElementById('runwayUsageChart'), { type: 'doughnut', data: { labels: Object.keys(runwayCounts), datasets: [{ data: Object.values(runwayCounts), backgroundColor: ['rgba(37, 99, 235, 0.85)', 'rgba(100, 116, 139, 0.85)', 'rgba(14, 165, 233, 0.85)'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1' } } } } }); }
+            function renderTopItemsChart(data, key, chartId, limit) { const counts = data.reduce((acc, flight) => { const item = flight[key] || 'N/A'; acc[item] = (acc[item] || 0) + 1; return acc; }, {}); delete counts['N/A']; const topItems = Object.entries(counts).sort(([,a],[,b]) => b - a).slice(0, limit); let chartInstance; if (chartId === 'aircraftTypesChart') chartInstance = aircraftTypesChart; if (chartId === 'operatorChart') chartInstance = operatorChart; if (chartInstance) chartInstance.destroy(); chartInstance = new Chart(document.getElementById(chartId), { type: 'bar', data: { labels: topItems.map(([item]) => item), datasets: [{ label: 'Voos', data: topItems.map(([,count]) => count), backgroundColor: 'rgba(37, 99, 235, 0.85)', borderRadius: 6 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.08)' }, ticks: { color: '#94a3b8' } }, y: { grid: { display: false }, ticks: { color: '#94a3b8' } } } }); if (chartId === 'aircraftTypesChart') aircraftTypesChart = chartInstance; if (chartId === 'operatorChart') operatorChart = chartInstance; }
+            function renderTrafficProjectionChart(data) { if (trafficProjectionChart) trafficProjectionChart.destroy(); const canvas = document.getElementById('trafficProjectionChart'); const container = canvas.parentElement.parentElement; const monthlyCounts = data.reduce((acc, flight) => { if (!flight.timestamp) return acc; const monthKey = flight.timestamp.slice(0, 7); acc[monthKey] = (acc[monthKey] || 0) + 1; return acc; }, {}); const sortedMonths = Object.keys(monthlyCounts).sort(); if (sortedMonths.length < 2) { container.style.display = 'none'; return; } container.style.display = 'block'; const historicalData = sortedMonths.map(month => monthlyCounts[month]); const regressionData = sortedMonths.map((month, index) => [index, monthlyCounts[month]]); const regressionLine = ss.linearRegressionLine(ss.linearRegression(regressionData)); const projectionLabels = []; const projectionData = []; const lastHistoricalValue = historicalData[historicalData.length - 1]; for (let i = 0; i < 3; i++) { const lastDate = new Date(sortedMonths[sortedMonths.length - 1] + '-01T12:00:00Z'); lastDate.setUTCMonth(lastDate.getUTCMonth() + i + 1); projectionLabels.push(lastDate.toLocaleString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC'})); const projectedValue = regressionLine(sortedMonths.length + i); projectionData.push(projectedValue > 0 ? Math.round(projectedValue) : 0); } trafficProjectionChart = new Chart(canvas, { type: 'line', data: { labels: sortedMonths.concat(projectionLabels), datasets: [{ label: 'Histórico Mensal', data: historicalData, borderColor: 'rgba(100, 116, 139, 1)', backgroundColor: 'rgba(100, 116, 139, 0.08)', fill: true, tension: 0.1 }, { label: 'Projeção', data: new Array(historicalData.length - 1).fill(null).concat([lastHistoricalValue], projectionData), borderColor: 'rgba(37, 99, 235, 1)', borderDash: [5, 5], fill: false, tension: 0.1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#cbd5e1' } } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.08)' }, ticks: { color: '#94a3b8' } }, x: { grid: { color: 'rgba(255, 255, 255, 0.08)' }, ticks: { color: '#94a3b8' } } } } }); }
             function checkForAnomalies(data) { anomalyAlertsList.innerHTML = ''; if (data.length < 7) { anomalyAlertsList.innerHTML = '<li>Dados insuficientes para análise.</li>'; return; } const dailyCounts = data.reduce((acc, flight) => { if (!flight.timestamp) return acc; const dayKey = flight.timestamp.slice(0, 10); acc[dayKey] = (acc[dayKey] || 0) + 1; return acc; }, {}); const allCounts = Object.values(dailyCounts); if (allCounts.length < 2) { anomalyAlertsList.innerHTML = '<li>Período muito curto para análise.</li>'; return; } const mean = ss.mean(allCounts); const stdDev = ss.standardDeviation(allCounts); const threshold = 1.5; const anomalies = []; for (const [day, count] of Object.entries(dailyCounts)) { if (count > mean + threshold * stdDev) { anomalies.push({ day, count, type: 'alto' }); } else if (count < mean - threshold * stdDev) { anomalies.push({ day, count, type: 'baixo' }); } } if (anomalies.length === 0) { anomalyAlertsList.innerHTML = '<li><i data-lucide="check-circle" class="w-4 h-4 inline-block mr-2 text-green-500"></i>Nenhuma anomalia significativa detectada.</li>'; lucide.createIcons(); return; } anomalies.sort((a,b) => new Date(a.day) - new Date(b.day)).forEach(anomaly => { const li = document.createElement('li'); const date = new Date(anomaly.day + 'T12:00:00Z').toLocaleDateString('pt-BR', {timeZone: 'UTC'}); const icon = anomaly.type === 'alto' ? '<i data-lucide="arrow-up-circle" class="w-4 h-4 inline-block mr-2 text-red-500"></i>' : '<i data-lucide="arrow-down-circle" class="w-4 h-4 inline-block mr-2 text-blue-500"></i>'; li.innerHTML = `${icon} <strong>Volume ${anomaly.type}:</strong> ${date} teve <strong>${anomaly.count}</strong> voos (média de ${Math.round(mean)}).`; anomalyAlertsList.appendChild(li); }); lucide.createIcons(); }
             
             function toggleLoading(isLoading) { uploadButton.disabled = isLoading; buttonText.textContent = isLoading ? 'Processando...' : 'Processar Arquivo(s)'; loadingSpinner.classList.toggle('hidden', !isLoading); }
